@@ -12,7 +12,7 @@ CREATE TABLE `usuarios` (
   `contrasena` VARCHAR(255) NOT NULL,
   `fecha_creacion` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(),
   PRIMARY KEY (`id`),
-  UNIQUE KEY `nombre_usuario` (`nombre_usuario`) -- El índice ya no necesita limitar longitud para VARCHAR
+  UNIQUE KEY `nombre_usuario` (`nombre_usuario`) 
 );
 
 -- Estructura de tabla para la tabla `publicaciones`
