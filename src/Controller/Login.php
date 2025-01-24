@@ -7,7 +7,7 @@ use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Security;
 use Symfony\Component\HttpFoundation\RedirectResponse;
-class PedidosLogin extends AbstractController
+class Login extends AbstractController
 {
     #[Route('/login', name: 'ctrl_login')]
     public function login(AuthenticationUtils $authenticationUtils): Response
