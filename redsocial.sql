@@ -1,41 +1,41 @@
-SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO"; 
 SET time_zone = "+00:00";
 
 -- Crear base de datos si no existe
 CREATE DATABASE IF NOT EXISTS redsocial;
 USE redsocial;
 
--- Estructura de tabla para la tabla `users`
-CREATE TABLE `users` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `username` text NOT NULL,
-  `password` text NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+-- Estructura de tabla para la tabla `usuarios`
+CREATE TABLE `usuarios` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `nombre_usuario` VARCHAR(255) NOT NULL,
+  `contrasena` VARCHAR(255) NOT NULL,
+  `fecha_creacion` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(),
   PRIMARY KEY (`id`),
-  UNIQUE KEY `username` (`username`(100)) -- Limita la longitud para índices en texto
+  UNIQUE KEY `nombre_usuario` (`nombre_usuario`) -- El índice ya no necesita limitar longitud para VARCHAR
 );
 
--- Estructura de tabla para la tabla `posts`
-CREATE TABLE `posts` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `user_id` bigint(20) NOT NULL,
-  `content` text NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+-- Estructura de tabla para la tabla `publicaciones`
+CREATE TABLE `publicaciones` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `id_usuario` INT NOT NULL,
+  `contenido` VARCHAR(255) NOT NULL,
+  `fecha_creacion` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(),
   PRIMARY KEY (`id`),
-  KEY `user_id` (`user_id`),
-  CONSTRAINT `posts_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+  KEY `id_usuario` (`id_usuario`),
+  CONSTRAINT `publicaciones_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE
 );
 
--- Estructura de tabla para la tabla `reactions`
-CREATE TABLE `reactions` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `post_id` bigint(20) NOT NULL,
-  `user_id` bigint(20) NOT NULL,
-  `type` text NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+-- Estructura de tabla para la tabla `reacciones`
+CREATE TABLE `reacciones` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `id_publicacion` INT NOT NULL,
+  `id_usuario` INT NOT NULL,
+  `tipo` VARCHAR(255) NOT NULL,
+  `fecha_creacion` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(),
   PRIMARY KEY (`id`),
-  KEY `post_id` (`post_id`),
-  KEY `user_id` (`user_id`),
-  CONSTRAINT `reactions_ibfk_1` FOREIGN KEY (`post_id`) REFERENCES `posts` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `reactions_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+  KEY `id_publicacion` (`id_publicacion`),
+  KEY `id_usuario` (`id_usuario`),
+  CONSTRAINT `reacciones_ibfk_1` FOREIGN KEY (`id_publicacion`) REFERENCES `publicaciones` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `reacciones_ibfk_2` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE
 );
