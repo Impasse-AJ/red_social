@@ -16,7 +16,7 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(name: 'nombre_usuario', type: 'string')]
     private $nombreUsuario;
-
+ 
     #[ORM\Column(name: 'contrasena', type: 'string')]
     private $contrasena;
 
