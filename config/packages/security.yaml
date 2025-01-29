@@ -1,39 +1,32 @@
 security:
-    # https://symfony.com/doc/current/security.html#registering-the-user-hashing-passwords
-    password_hashers:
-        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
-    # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
+    # Proveedores de usuarios que pueden usar los firewalls:
     providers:
-        users_in_memory: { memory: null }
+        app_user_provider:                 
+            entity:
+                class: App\Entity\Medico    # La entidad
+                property: usuario           # Atributo de la clase que es el nombre de usuario
+    
+    # Hasheo de las claves de los usuarios
+    password_hashers:
+        App\Entity\Medico:
+                algorithm: plaintext
+    
+    # Firewalls (hay 2, si te fijas)
     firewalls:
-        dev:
+        dev:                                # ===== Firewall de desarrollo ===== no lo toques, te permite acceder al profiler si estropeas algo
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
-        main:
-            lazy: true
-            provider: users_in_memory
+        main:                               # ===== Firewall principal =====
+            lazy: true                      # Todas las páginas se pueden ver estando autorizado (o no)
+            provider: app_user_provider     # Los usuarios salen del proveedor declarado arriba con la entidad Medico
+            form_login:
+                login_path: app_login       # Ruta al controlador de login
+                check_path: app_login       # Ruta a la que se envían el POST del formulario de login
+                default_target_path: portal_clinico # Si hay autenticación correcta, el controlador a dónde se manda al usuario
+            logout:
+                path: /logout               # Ruta inventada (y declarada aquí) para hacer el logout
+                target: app_login           # Si se le desloguea bien, a dónde se le manda
 
-            # activate different ways to authenticate
-            # https://symfony.com/doc/current/security.html#the-firewall
-
-            # https://symfony.com/doc/current/security/impersonating_user.html
-            # switch_user: true
-
-    # Easy way to control access for large sections of your site
-    # Note: Only the *first* access control that matches will be used
-    access_control:
+    access_control:                         # Qué páginas se protegen y cuáles no: esta tarea se la delegamos a los controladores
         # - { path: ^/admin, roles: ROLE_ADMIN }
         # - { path: ^/profile, roles: ROLE_USER }
-
-when@test:
-    security:
-        password_hashers:
-            # By default, password hashers are resource intensive and take time. This is
-            # important to generate secure password hashes. In tests however, secure hashes
-            # are not important, waste resources and increase test times. The following
-            # reduces the work factor to the lowest possible values.
-            Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface:
-                algorithm: auto
-                cost: 4 # Lowest possible value for bcrypt
-                time_cost: 3 # Lowest possible value for argon
-                memory_cost: 10 # Lowest possible value for argon
