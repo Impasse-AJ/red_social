@@ -1,32 +1,33 @@
 security:
     # Proveedores de usuarios que pueden usar los firewalls:
     providers:
-        app_user_provider:                 
+        app_user_provider:
             entity:
-                class: App\Entity\Medico    # La entidad
-                property: usuario           # Atributo de la clase que es el nombre de usuario
+                class: App\Entity\Usuario  # Cambié la entidad de Medico a Usuario
+                property: email            # Usaremos el email como identificador único
     
     # Hasheo de las claves de los usuarios
     password_hashers:
-        App\Entity\Medico:
-                algorithm: plaintext
+        App\Entity\Usuario:
+            algorithm: auto  # Symfony elegirá el mejor algoritmo automáticamente
     
-    # Firewalls (hay 2, si te fijas)
+    # Firewalls
     firewalls:
-        dev:                                # ===== Firewall de desarrollo ===== no lo toques, te permite acceder al profiler si estropeas algo
+        dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
-        main:                               # ===== Firewall principal =====
-            lazy: true                      # Todas las páginas se pueden ver estando autorizado (o no)
-            provider: app_user_provider     # Los usuarios salen del proveedor declarado arriba con la entidad Medico
+        main:
+            lazy: true
+            provider: app_user_provider
             form_login:
-                login_path: app_login       # Ruta al controlador de login
-                check_path: app_login       # Ruta a la que se envían el POST del formulario de login
-                default_target_path: portal_clinico # Si hay autenticación correcta, el controlador a dónde se manda al usuario
+                login_path: app_login
+                check_path: app_login
+                default_target_path: app_home  # Página a la que se redirige tras login exitoso
             logout:
-                path: /logout               # Ruta inventada (y declarada aquí) para hacer el logout
-                target: app_login           # Si se le desloguea bien, a dónde se le manda
+                path: /logout
+                target: app_login
 
-    access_control:                         # Qué páginas se protegen y cuáles no: esta tarea se la delegamos a los controladores
-        # - { path: ^/admin, roles: ROLE_ADMIN }
-        # - { path: ^/profile, roles: ROLE_USER }
+    # Control de acceso basado en roles
+    access_control:
+        - { path: ^/admin, roles: ROLE_ADMIN }
+        - { path: ^/profile, roles: ROLE_USER }ss
