@@ -5,19 +5,20 @@ namespace App\Controller;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 use App\Entity\Usuario;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class RecuperarContraseñaController extends AbstractController
 {
     #[Route('/recuperar-password', name: 'recuperar_password')]
     public function mostrarFormulario()
     {
-        return $this->render('recuperar_password.html.twig',[
-            'success' =>null,'error'=>null
+        return $this->render('recuperar_password.html.twig', [
+            'success' => null,
+            'error' => null
         ]);
     }
 
@@ -38,27 +39,83 @@ class RecuperarContraseñaController extends AbstractController
             ]);
         }
 
-        // Generar un código de recuperación de 6 dígitos
+        //use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+
+        // Generar un código de recuperación aleatorio y hashearlo
         $codigoRecuperacion = random_int(100000, 999999);
-        $usuario->setCodigoRecuperacion($codigoRecuperacion);
+        $codigoHasheado = password_hash($codigoRecuperacion, PASSWORD_BCRYPT);
+        $usuario->setCodigoRecuperacion($codigoHasheado);
 
         // Guardar el código en la base de datos
         $entityManager->persist($usuario);
         $entityManager->flush();
 
-        // Enviar correo con el código de recuperación
+        // Generar la URL absoluta para el restablecimiento de contraseña
+        $urlRecuperacion = $this->generateUrl(
+            'restablecer_password',
+            ['codigo' => $codigoRecuperacion], // Se pasará el código en la URL
+            UrlGeneratorInterface::ABSOLUTE_URL // 🔥 Asegura la URL completa
+        );
+
+        // Enviar correo con el enlace de recuperación
         $emailMessage = (new Email())
             ->from('no-reply@empresa.com')
             ->to($usuario->getNombreUsuario())
-            ->subject('Código de Recuperación de Contraseña')
-            ->html("<p>Tu código de recuperación es: <strong>$codigoRecuperacion</strong></p>
-                    <p>Ingresa este código en la página de recuperación para restablecer tu contraseña.</p>");
+            ->subject('Restablecer tu Contraseña')
+            ->html("<p>Haz clic en el siguiente enlace para restablecer tu contraseña:</p>
+            <a href='" . $urlRecuperacion . "'>Restablecer Contraseña</a>");
 
-        $mailer->send($emailMessage); // 📩 Enviar correo a Mailtrap
+        $mailer->send($emailMessage);
 
-        return $this->render('recuperar_password.html.twig', ['error'=>null,
+
+        return $this->render('recuperar_password.html.twig', [
+            'error' => null,
             'success' => 'Se ha enviado un código de recuperación a tu correo.',
         ]);
     }
-    
+    #[Route('/restablecer-password/{codigo}', name: 'restablecer_password')]
+    public function mostrarRestablecerFormulario($codigo, EntityManagerInterface $entityManager)
+    {
+        // Buscar al usuario con el código de recuperación
+        $usuario = $entityManager->getRepository(Usuario::class)->findOneBy(['codigoRecuperacion' => $codigo]);
+        var_dump($usuario);
+        die();
+        // Validar si el código de recuperación es correcto
+        if (!$usuario) {
+            return $this->render('restablecer_password.html.twig', [
+                'error' => 'El código de recuperación es inválido o ya ha sido utilizado.',
+                'codigo' => null
+            ]);
+        }
+
+        return $this->render('restablecer_password.html.twig', [
+            'error' => null,
+            'codigo' => $codigo // Se enviará al formulario para procesarlo
+        ]);
+    }
+
+    #[Route('/procesar-restablecimiento', name: 'procesar_restablecimiento', methods: ['POST'])]
+    public function procesarRestablecimiento(Request $request, EntityManagerInterface $entityManager)
+    {
+        $codigo = $request->request->get('codigo');
+        $nuevaContraseña = $request->request->get('password');
+
+        // Buscar al usuario con el código de recuperación
+        $usuario = $entityManager->getRepository(Usuario::class)->findOneBy(['codigoRecuperacion' => $codigo]);
+
+        if (!$usuario) {
+            return $this->render('restablecer_password.html.twig', [
+                'error' => 'El código de recuperación es inválido o ya ha sido utilizado.',
+                'codigo' => null
+            ]);
+        }
+
+        // Asignar la nueva contraseña directamente (Symfony la hasheará automáticamente)
+        $usuario->setContrasena($nuevaContraseña);
+        $usuario->setCodigoRecuperacion(null); // Se elimina el código de recuperación
+
+        $entityManager->flush(); // Guardar cambios en la base de datos
+
+        return $this->redirectToRoute('ctrl_login'); // Redirigir al login
+    }
 }
