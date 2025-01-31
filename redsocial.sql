@@ -53,3 +53,5 @@ VALUES
 ('abraham@social.com', PASSWORD('1234'), CURRENT_TIMESTAMP),
 ('alejo@social.com', PASSWORD('1234'), CURRENT_TIMESTAMP),
 ('alex@social.com', PASSWORD('1234'), CURRENT_TIMESTAMP);
+ALTER TABLE usuarios ADD token_recuperacion VARCHAR(255) DEFAULT NULL;
+ALTER TABLE usuarios ADD expiracion_token DATETIME DEFAULT NULL;

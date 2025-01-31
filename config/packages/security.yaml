@@ -3,8 +3,8 @@ security:
     providers:
         app_user_provider:
             entity:
-                class: App\Entity\Usuario  # Cambié la entidad de Medico a Usuario
-                property: email            # Usaremos el email como identificador único
+                class: App\Entity\Usuario  # Clase correcta
+                property: nombreUsuario    # Se usa 'nombreUsuario' en vez de 'email'
     
     # Hasheo de las claves de los usuarios
     password_hashers:
@@ -20,14 +20,14 @@ security:
             lazy: true
             provider: app_user_provider
             form_login:
-                login_path: app_login
-                check_path: app_login
-                default_target_path: app_home  # Página a la que se redirige tras login exitoso
+                login_path: ctrl_login  # Corregido (antes era app_login)
+                check_path: ctrl_login  # Corregido (antes era app_login)
+                default_target_path: /home  # Verifica que esta ruta exista
             logout:
-                path: /logout
-                target: app_login
+                path: ctrl_logout  # Corregido (antes era /logout)
+                target: ctrl_login  # Redirige al login tras cerrar sesión
 
     # Control de acceso basado en roles
     access_control:
         - { path: ^/admin, roles: ROLE_ADMIN }
-        - { path: ^/profile, roles: ROLE_USER }ss
+        - { path: ^/profile, roles: ROLE_USER }
