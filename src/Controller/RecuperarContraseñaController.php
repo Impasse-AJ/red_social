@@ -56,8 +56,9 @@ class RecuperarContraseñaController extends AbstractController
 
         $mailer->send($emailMessage); // 📩 Enviar correo a Mailtrap
 
-        return $this->render('recuperar_password.html.twig', [
+        return $this->render('recuperar_password.html.twig', ['error'=>null,
             'success' => 'Se ha enviado un código de recuperación a tu correo.',
         ]);
     }
+    
 }

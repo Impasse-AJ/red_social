@@ -20,12 +20,12 @@ security:
             lazy: true
             provider: app_user_provider
             form_login:
-                login_path: ctrl_login  # Corregido (antes era app_login)
-                check_path: ctrl_login  # Corregido (antes era app_login)
-                default_target_path: /home  # Verifica que esta ruta exista
+                login_path: ctrl_login 
+                check_path: ctrl_login
+                default_target_path: /home  
             logout:
-                path: ctrl_logout  # Corregido (antes era /logout)
-                target: ctrl_login  # Redirige al login tras cerrar sesión
+                path: ctrl_logout 
+                target: ctrl_login
 
     # Control de acceso basado en roles
     access_control:
