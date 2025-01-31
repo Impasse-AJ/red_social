@@ -1,3 +1,4 @@
 framework:
     mailer:
-        dsn: '%env(MAILER_DSN)%'
+        transports:
+            smtp: '%env(MAILER_DSN)%'  # 📩 Esto enviará los correos directamente

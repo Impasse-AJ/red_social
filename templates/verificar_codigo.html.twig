@@ -1,0 +1,19 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Verificar Código{% endblock %}
+
+{% block body %}
+<h2>Verificar Código</h2>
+
+{% if error %}
+    <p style="color: red;">{{ error }}</p>
+{% endif %}
+
+<form action="{{ path('procesar_verificacion') }}" method="post">
+    <label for="codigo">Código de Recuperación:</label>
+    <input type="text" name="codigo" required pattern="\d{6}" placeholder="Ingresa el código de 6 dígitos">
+    <button type="submit">Verificar Código</button>
+</form>
+
+<a href="{{ path('recuperar_password') }}">Volver atrás</a>
+{% endblock %}
