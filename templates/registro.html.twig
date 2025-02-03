@@ -36,8 +36,7 @@
             margin-bottom: 5px;
         }
         input[type="text"],
-        input[type="password"],
-        input[type="email"] {
+        input[type="password"] {
             width: 100%;
             padding: 10px;
             border: 1px solid #ccc;
@@ -62,24 +61,26 @@
 <body>
     <div class="registro-container">
         <h1>Registro</h1>
-        {% if errors %}
-            <div class="error">{{ errors|join('<br>') }}</div>
-        {% endif %}
+        
         <form method="post" action="{{ path('registro') }}">
+            <!-- Campo de Nombre de Usuario -->
             <div class="form-group">
                 <label for="nombre_usuario">Nombre de Usuario:</label>
                 <input type="text" id="nombre_usuario" name="nombre_usuario" required>
             </div>
-            <div class="form-group">
-                <label for="email">Correo Electrónico:</label>
-                <input type="email" id="email" name="email" required>
-            </div>
+            
+            <!-- Campo de Contraseña -->
             <div class="form-group">
                 <label for="contrasena">Contraseña:</label>
                 <input type="password" id="contrasena" name="contrasena" required>
             </div>
+            
+            <!-- Botón de Registro -->
             <button type="submit">Registrarse</button>
         </form>
+
+
     </div>
 </body>
 </html>
+
