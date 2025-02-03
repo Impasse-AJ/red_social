@@ -16,6 +16,8 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(name: 'nombre_usuario', type: 'string', unique: true)]
     private $nombreUsuario;
+    #[ORM\Column(name: 'activo', type: 'boolean')]
+    private bool $activo = false;
  
     #[ORM\Column(name: 'contrasena', type: 'string')]
     private $contrasena;
@@ -50,4 +52,17 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
     public function getPassword(): string { return $this->contrasena; }
     public function getUserIdentifier(): string { return $this->nombreUsuario; }
     public function eraseCredentials(): void {}
+   
+
+    // Getter y Setter para 'activo'
+    public function getActivo(): bool
+    {
+        return $this->activo;
+    }
+
+    public function setActivo(bool $activo): self
+    {
+        $this->activo = $activo;
+        return $this;
+    }
 }

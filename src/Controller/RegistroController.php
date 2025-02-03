@@ -57,7 +57,6 @@ class RegistroController extends AbstractController
             $usuario = new Usuario();
             $usuario->setNombreUsuario($nombreUsuario);
             $usuario->setContrasena($passwordHasher->hashPassword($usuario, $contrasena));
-            $usuario->setRoles(['ROLE_USER']);
             $usuario->setActivo(false);
             
             // Persistir el usuario
