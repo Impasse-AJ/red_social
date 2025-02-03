@@ -39,6 +39,7 @@ CREATE TABLE `reacciones` (
 
 -- Insertar usuarios de prueba con contraseña hasheada (1234)
 INSERT INTO `usuarios` (`nombre_usuario`, `contrasena`) VALUES
-('abraham@social.com', '$2y$10$Xh5jK9z...'), 
-('alejo@social.com', '$2y$10$Xh5jK9z...'), 
-('alex@social.com', '$2y$10$Xh5jK9z...');
+('abraham@social.com', '$2y$10$GAg870uvPLRNCbm8LFez4eg0pJz7Z8.ABVYoLRqIk00tWR8Ef5T/O'), 
+('alejo@social.com', '$2y$10$f/0Xle4yDhedSaSR8vPrYOlgBNkhi2PrsQe83Y3.nVa6tb6ClQcte'), 
+('alex@social.com', '$2y$10$XAj1J5.1OSZCad9eGg6/P.Ef608RmhIv.adMnfu5JS98Wyd0yNehW');
+ALTER TABLE usuarios ADD activo BOOLEAN DEFAULT FALSE;
