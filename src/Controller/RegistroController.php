@@ -14,7 +14,7 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
-use Symfony\Component\Validator\Constraints as Assert;
+
 
 class RegistroController extends AbstractController
 {
@@ -26,25 +26,8 @@ class RegistroController extends AbstractController
             $nombreUsuario = $request->request->get('nombre_usuario');
             $contrasena = $request->request->get('contrasena');
             
-            // Validar datos
-            $constraints = new Assert\Collection([
-                'nombre_usuario' => [
-                    new Assert\NotBlank()
-                   
-                   
-                ],
-                
-            ]);
-            
-            $violations = $validator->validate([
-                'nombre_usuario' => $nombreUsuario,
-                'contrasena' => $contrasena
-            ], $constraints);
+        
 
-            if (count($violations) > 0) {
-                // Si hay errores de validación
-                return $this->render('registro.html.twig', ['errors' => $violations]);
-            }
 
             // Verificar si el nombre de usuario ya existe
             $usuarioExistente = $em->getRepository(Usuario::class)->findOneBy(['nombreUsuario' => $nombreUsuario]);
@@ -63,15 +46,20 @@ class RegistroController extends AbstractController
             $em->persist($usuario);
             $em->flush();
             
-            // Enviar email de activación
-            $emailMessage = (new Email())
-                ->from('noreply@redsocial.com')
-                ->to($nombreUsuario . '@redsocial.com') // Asegúrate de que se envíe al correo relacionado
-                ->subject('Activa tu cuenta')
-                ->html('<p>Hola, activa tu cuenta haciendo clic en el siguiente enlace: </p>
-                       <a href="' . $this->generateUrl('activar_cuenta', ['id' => $usuario->getId()], 0) . '">Activar Cuenta</a>');
+         
             
-            $mailer->send($emailMessage);
+            try {
+                $emailMessage = (new Email())
+                    ->from('noreply@redsocial.com')
+                    ->to('tu_correo@ejemplo.com') // Usa un email real para pruebas
+                    ->subject('Activa tu cuenta')
+                    ->html('<p>Hola, activa tu cuenta haciendo clic en el siguiente enlace: </p>
+                           <a href="' . $this->generateUrl('activar_cuenta', ['id' => $usuario->getId()], 0) . '">Activar Cuenta</a>');
+            
+                $mailer->send($emailMessage);
+            } catch (\Exception $e) {
+                return new Response('Error al enviar el correo: ' . $e->getMessage());
+            }
             
             return $this->redirectToRoute('mensaje_activacion');
         }
