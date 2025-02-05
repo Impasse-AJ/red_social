@@ -11,6 +11,8 @@ use Symfony\Component\Mime\Email;
 use App\Entity\Usuario;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
+use function PHPSTORM_META\map;
+
 class RecuperarContraseñaController extends AbstractController
 {
     #[Route('/recuperar-password', name: 'recuperar_password')]
@@ -43,7 +45,7 @@ class RecuperarContraseñaController extends AbstractController
 
         // Generar un código de recuperación aleatorio y hashearlo
         $codigoRecuperacion = random_int(100000, 999999);
-        $codigoHasheado = password_hash($codigoRecuperacion, PASSWORD_BCRYPT);
+        $codigoHasheado = md5($codigoRecuperacion);
         $usuario->setCodigoRecuperacion($codigoHasheado);
 
         // Guardar el código en la base de datos
@@ -53,7 +55,7 @@ class RecuperarContraseñaController extends AbstractController
         // Generar la URL absoluta para el restablecimiento de contraseña
         $urlRecuperacion = $this->generateUrl(
             'restablecer_password',
-            ['codigo' => $codigoHasheado], // Se pasará el código en la URL
+            ['codigo' => $codigoRecuperacion], // Se pasará el código en la URL
             UrlGeneratorInterface::ABSOLUTE_URL // 🔥 Asegura la URL completa
         );
 
@@ -77,7 +79,7 @@ class RecuperarContraseñaController extends AbstractController
     public function mostrarRestablecerFormulario($codigo, EntityManagerInterface $entityManager)
     {
         // Buscar al usuario con el código de recuperación
-        $usuario = $entityManager->getRepository(Usuario::class)->findOneBy(['codigoRecuperacion' => $codigo]);
+        $usuario = $entityManager->getRepository(Usuario::class)->findOneBy(['codigoRecuperacion' => md5($codigo)]);
         // Validar si el código de recuperación es correcto
         if (!$usuario) {
             return $this->render('restablecer_password.html.twig', [
@@ -107,8 +109,7 @@ class RecuperarContraseñaController extends AbstractController
             ]);
         }
 
-        // Asignar la nueva contraseña directamente (Symfony la hasheará automáticamente)
-        $usuario->setContrasena($nuevaContrasena);
+        $usuario->setContrasena(password_hash($nuevaContrasena, PASSWORD_BCRYPT));
         $usuario->setCodigoRecuperacion(null); // Se elimina el código de recuperación
 
         $entityManager->flush(); // Guardar cambios en la base de datos
