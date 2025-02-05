@@ -12,11 +12,12 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class RegistroController extends AbstractController
 {
     #[Route('/registro', name: 'registro')]
-    public function register(Request $request, EntityManagerInterface $em, MailerInterface $mailer, ValidatorInterface $validator): Response
+    public function register(Request $request, EntityManagerInterface $em, MailerInterface $mailer, ValidatorInterface $validator, UserPasswordHasherInterface $passwordHasher): Response
     {
         if ($request->isMethod('POST')) {
             // Obtener datos del formulario
@@ -33,7 +34,7 @@ class RegistroController extends AbstractController
             // Crear nuevo usuario
             $usuario = new Usuario();
             $usuario->setNombreUsuario($nombreUsuario);
-            $usuario->setContrasena(md5($contrasena)); // Hashear la contraseña con MD5
+            $usuario->setContrasena($passwordHasher->hashPassword($usuario, $contrasena)); // Hashear la contraseña
             $usuario->setActivo(false);
             
             // Persistir el usuario
@@ -75,6 +76,7 @@ class RegistroController extends AbstractController
         return $this->redirectToRoute('ctrl_login');
     }
 }
+
 
 
 
