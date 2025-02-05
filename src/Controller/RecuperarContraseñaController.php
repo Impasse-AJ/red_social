@@ -53,7 +53,7 @@ class RecuperarContraseñaController extends AbstractController
         // Generar la URL absoluta para el restablecimiento de contraseña
         $urlRecuperacion = $this->generateUrl(
             'restablecer_password',
-            ['codigo' => $codigoRecuperacion], // Se pasará el código en la URL
+            ['codigo' => $codigoHasheado], // Se pasará el código en la URL
             UrlGeneratorInterface::ABSOLUTE_URL // 🔥 Asegura la URL completa
         );
 
@@ -78,8 +78,6 @@ class RecuperarContraseñaController extends AbstractController
     {
         // Buscar al usuario con el código de recuperación
         $usuario = $entityManager->getRepository(Usuario::class)->findOneBy(['codigoRecuperacion' => $codigo]);
-        var_dump($usuario);
-        die();
         // Validar si el código de recuperación es correcto
         if (!$usuario) {
             return $this->render('restablecer_password.html.twig', [
@@ -98,8 +96,7 @@ class RecuperarContraseñaController extends AbstractController
     public function procesarRestablecimiento(Request $request, EntityManagerInterface $entityManager)
     {
         $codigo = $request->request->get('codigo');
-        $nuevaContraseña = $request->request->get('password');
-
+        $nuevaContrasena = $request->request->get('password');
         // Buscar al usuario con el código de recuperación
         $usuario = $entityManager->getRepository(Usuario::class)->findOneBy(['codigoRecuperacion' => $codigo]);
 
@@ -111,7 +108,7 @@ class RecuperarContraseñaController extends AbstractController
         }
 
         // Asignar la nueva contraseña directamente (Symfony la hasheará automáticamente)
-        $usuario->setContrasena($nuevaContraseña);
+        $usuario->setContrasena($nuevaContrasena);
         $usuario->setCodigoRecuperacion(null); // Se elimina el código de recuperación
 
         $entityManager->flush(); // Guardar cambios en la base de datos
