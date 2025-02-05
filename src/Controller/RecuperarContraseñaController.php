@@ -100,7 +100,7 @@ class RecuperarContraseñaController extends AbstractController
         $codigo = $request->request->get('codigo');
         $nuevaContrasena = $request->request->get('password');
         // Buscar al usuario con el código de recuperación
-        $usuario = $entityManager->getRepository(Usuario::class)->findOneBy(['codigoRecuperacion' => $codigo]);
+        $usuario = $entityManager->getRepository(Usuario::class)->findOneBy(['codigoRecuperacion' => md5($codigo)]);
 
         if (!$usuario) {
             return $this->render('restablecer_password.html.twig', [
