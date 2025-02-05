@@ -1,6 +1,5 @@
 <?php 
 
-
 namespace App\Controller;
 
 use App\Entity\Usuario;
@@ -10,25 +9,20 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-
 class RegistroController extends AbstractController
 {
     #[Route('/registro', name: 'registro')]
-    public function register(Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $passwordHasher, MailerInterface $mailer, ValidatorInterface $validator): Response
+    public function register(Request $request, EntityManagerInterface $em, MailerInterface $mailer, ValidatorInterface $validator): Response
     {
         if ($request->isMethod('POST')) {
             // Obtener datos del formulario
             $nombreUsuario = $request->request->get('nombre_usuario');
             $contrasena = $request->request->get('contrasena');
             
-        
-
-
             // Verificar si el nombre de usuario ya existe
             $usuarioExistente = $em->getRepository(Usuario::class)->findOneBy(['nombreUsuario' => $nombreUsuario]);
             if ($usuarioExistente) {
@@ -39,14 +33,12 @@ class RegistroController extends AbstractController
             // Crear nuevo usuario
             $usuario = new Usuario();
             $usuario->setNombreUsuario($nombreUsuario);
-            $usuario->setContrasena($passwordHasher->hashPassword($usuario, $contrasena));
+            $usuario->setContrasena(md5($contrasena)); // Hashear la contraseña con MD5
             $usuario->setActivo(false);
             
             // Persistir el usuario
             $em->persist($usuario);
             $em->flush();
-            
-         
             
             try {
                 $emailMessage = (new Email())
@@ -61,7 +53,7 @@ class RegistroController extends AbstractController
                 return new Response('Error al enviar el correo: ' . $e->getMessage());
             }
             
-            return $this->redirectToRoute('mensaje_activacion');
+            return $this->redirectToRoute('ctrl_login');
         }
         
         return $this->render('registro.html.twig');
@@ -83,4 +75,7 @@ class RegistroController extends AbstractController
         return $this->redirectToRoute('ctrl_login');
     }
 }
+
+
+
 
