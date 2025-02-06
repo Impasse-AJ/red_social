@@ -1,0 +1,29 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Perfil de {{ usuario.nombreUsuario }}{% endblock %}
+
+{% block body %}
+    <h1>Perfil de {{ usuario.nombreUsuario }}</h1>
+
+    {% if propietario %}
+        <h2>Publicar nuevo mensaje</h2>
+        <form method="POST" action="{{ path('nueva_publicacion', { id: usuario.id }) }}">
+            <textarea name="contenido" required placeholder="Escribe algo..."></textarea><br>
+            <button type="submit">Publicar</button>
+        </form>
+    {% endif %}
+
+    <h2>Publicaciones</h2>
+    {% if publicaciones is empty %}
+        <p>No hay publicaciones aún.</p>
+    {% else %}
+        <ul>
+            {% for publicacion in publicaciones %}
+                <li>
+                    <p>{{ publicacion.contenido }}</p>
+                    <small>Publicado el {{ publicacion.fechaCreacion|date('d/m/Y H:i') }}</small>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+{% endblock %}
