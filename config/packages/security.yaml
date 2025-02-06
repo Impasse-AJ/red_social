@@ -23,7 +23,7 @@ security:
             form_login:
                 login_path: ctrl_login 
                 check_path: ctrl_login
-                default_target_path: listar_usuarios
+                default_target_path: ctrl_home
             logout:
                 path: ctrl_logout 
                 target: ctrl_login

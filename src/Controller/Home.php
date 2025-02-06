@@ -1,21 +1,26 @@
 <?php
+
 namespace App\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Doctrine\ORM\EntityManagerInterface;
+use App\Entity\Usuario;
 
 class Home extends AbstractController
 {
     #[Route('/home', name: 'ctrl_home')]
-    #[IsGranted(attribute: 'IS_AUTHENTICATED_FULLY')] // 🚀 Solo usuarios autenticados pueden ver la lista
-
-    public function home(): Response
+    #[IsGranted('IS_AUTHENTICATED_FULLY')] // 🔐 Solo usuarios autenticados pueden acceder
+    public function home(EntityManagerInterface $entityManager): Response
     {
-        // Puedes pasar datos al template si lo necesitas
+        $usuario = $this->getUser(); // Obtener usuario autenticado
+        $usuarios = $entityManager->getRepository(Usuario::class)->findAll(); // Obtener lista de usuarios
+
         return $this->render('home.html.twig', [
-            'mensaje' => 'Bienvenido a tu página de inicio.'
+            'usuario' => $usuario,
+            'usuarios' => $usuarios,
         ]);
     }
 }
