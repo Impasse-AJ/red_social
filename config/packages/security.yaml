@@ -30,6 +30,7 @@ security:
 
     # Control de acceso basado en roles
     access_control:
+        - { path: ^/usuarios, roles: ROLE_USER }  # 🚀 Protege la ruta /usuarios para usuarios logueados
         - { path: ^/admin, roles: ROLE_ADMIN }
         - { path: ^/profile, roles: ROLE_USER }
 
