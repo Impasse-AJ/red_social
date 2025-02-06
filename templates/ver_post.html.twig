@@ -1,0 +1,34 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ post.contenido }} - Comentarios{% endblock %}
+
+{% block body %}
+    <h1>Publicación</h1>
+    <p>{{ post.contenido }}</p>
+    <p><small>Publicado el {{ post.fechaCreacion|date('d/m/Y H:i') }}</small></p>
+
+    <h2>Comentarios</h2>
+    {% if post.comentarios is not empty %}
+        <ul>
+            {% for comentario in post.comentarios|reverse %}
+                <li>
+                    <strong>{{ comentario.usuario.nombreUsuario }}</strong>: {{ comentario.contenido }}
+                    <br>
+                    <small>Publicado el {{ comentario.fechaCreacion|date('d/m/Y H:i') }}</small>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No hay comentarios aún.</p>
+    {% endif %}
+
+    {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+        <h3>Agregar Comentario</h3>
+        <form method="POST" action="{{ path('agregar_comentario', { id: post.id }) }}">
+            <textarea name="contenido" required></textarea><br>
+            <button type="submit">Comentar</button>
+        </form>
+    {% else %}
+        <p><a href="{{ path('ctrl_login') }}">Inicia sesión</a> para comentar.</p>
+    {% endif %}
+{% endblock %}

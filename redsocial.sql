@@ -25,6 +25,18 @@ CREATE TABLE `publicaciones` (
   FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE
 );
 
+CREATE TABLE `comentarios` (
+    id INT NOT NULL AUTO_INCREMENT,
+    id_publicacion INT NOT NULL,
+    id_usuario INT NOT NULL,
+    contenido TEXT NOT NULL,
+    fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(),
+    PRIMARY KEY (id),
+    FOREIGN KEY (id_publicacion) REFERENCES publicaciones(id) ON DELETE CASCADE,
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id) ON DELETE CASCADE
+);
+
+
 -- Estructura de tabla para la tabla `reacciones`
 CREATE TABLE `reacciones` (
   `id` INT NOT NULL AUTO_INCREMENT,
