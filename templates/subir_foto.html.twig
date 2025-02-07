@@ -1,0 +1,14 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Subir Foto de Perfil{% endblock %}
+
+{% block body %}
+    <h1>Subir Foto de Perfil</h1>
+
+    <form method="POST" enctype="multipart/form-data">
+        <input type="file" name="foto" accept="image/*" required>
+        <button type="submit">Subir</button>
+    </form>
+
+    <a href="{{ path('ver_perfil', { id: usuario.id }) }}">Volver al Perfil</a>
+{% endblock %}

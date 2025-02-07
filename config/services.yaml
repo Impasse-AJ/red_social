@@ -1,5 +1,5 @@
 parameters:
-
+    foto_perfil_directorio: '%kernel.project_dir%/public/uploads'
 services:
     # Default configuration for services
     _defaults:

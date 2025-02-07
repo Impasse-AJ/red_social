@@ -59,4 +59,57 @@ class PerfilController extends AbstractController
 
         return $this->redirectToRoute('ver_perfil', ['id' => $id]);
     }
+    #[Route('/perfil/{id}/editar', name: 'editar_perfil')]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    public function editarPerfil(int $id, Request $request, EntityManagerInterface $entityManager): Response
+    {
+        $usuario = $entityManager->getRepository(Usuario::class)->find($id);
+
+        if (!$usuario || $this->getUser()->getId() !== $usuario->getId()) {
+            throw $this->createAccessDeniedException("No puedes editar este perfil.");
+        }
+
+        if ($request->isMethod('POST')) {
+            $nuevoNombre = $request->request->get('nombre_usuario');
+
+            if ($nuevoNombre) {
+                $usuario->setNombreUsuario($nuevoNombre);
+                $entityManager->flush();
+
+                return $this->redirectToRoute('ver_perfil', ['id' => $id]);
+            }
+        }
+
+        return $this->render('editar_perfil.html.twig', [
+            'usuario' => $usuario,
+        ]);
+    }
+    #[Route('/perfil/{id}/subir-foto', name: 'subir_foto_perfil')]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    public function subirFotoPerfil(Request $request, int $id, EntityManagerInterface $entityManager): Response
+    {
+        $usuario = $entityManager->getRepository(Usuario::class)->find($id);
+
+        if (!$usuario || $this->getUser()->getId() !== $usuario->getId()) {
+            throw $this->createAccessDeniedException("No puedes modificar esta foto de perfil.");
+        }
+
+        if ($request->isMethod('POST') && $request->files->get('foto')) {
+            $foto = $request->files->get('foto');
+            $nombreArchivo = uniqid() . '.' . $foto->guessExtension();
+
+            // Mover la imagen a la carpeta "uploads"
+            $foto->move($this->getParameter('foto_perfil_directorio'), $nombreArchivo);
+
+            // Guardar en la BD la nueva ruta de la imagen
+            $usuario->setFotoPerfil($nombreArchivo);
+            $entityManager->flush();
+
+            return $this->redirectToRoute('ver_perfil', ['id' => $id]);
+        }
+
+        return $this->render('subir_foto.html.twig', [
+            'usuario' => $usuario,
+        ]);
+    }
 }

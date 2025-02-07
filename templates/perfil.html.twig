@@ -5,15 +5,26 @@
 {% block body %}
     <h1>Perfil de {{ usuario.nombreUsuario }}</h1>
 
+    {% if usuario.fotoPerfil %}
+        <img src="{{ asset('uploads/' ~ usuario.fotoPerfil) }}" alt="Foto de perfil" width="150">
+    {% endif %}
     {% if propietario %}
-        <h2>Publicar nuevo mensaje</h2>
+        <a href="{{ path('subir_foto_perfil', { id: usuario.id }) }}">📸 Subir Foto</a>
+    {% endif %}
+    
+    {% if propietario %}
+        <a href="{{ path('editar_perfil', { id: usuario.id }) }}">✏️ Editar Perfil</a>
+    {% endif %}
+
+    <h2>Publicaciones</h2>
+    {% if propietario %}
+        <h3>Publicar nuevo mensaje</h3>
         <form method="POST" action="{{ path('nueva_publicacion', { id: usuario.id }) }}">
             <textarea name="contenido" required placeholder="Escribe algo..."></textarea><br>
             <button type="submit">Publicar</button>
         </form>
     {% endif %}
 
-    <h2>Publicaciones</h2>
     {% if publicaciones is empty %}
         <p>No hay publicaciones aún.</p>
     {% else %}
@@ -22,6 +33,12 @@
                 <li>
                     <p>{{ publicacion.contenido }}</p>
                     <small>Publicado el {{ publicacion.fechaCreacion|date('d/m/Y H:i') }}</small>
+                    
+                    {% if propietario %}
+                        <form method="POST" action="{{ path('eliminar_publicacion', { id: publicacion.id }) }}">
+                            <button type="submit" onclick="return confirm('¿Seguro que quieres eliminar esta publicación?')">❌ Eliminar</button>
+                        </form>
+                    {% endif %}
                 </li>
             {% endfor %}
         </ul>

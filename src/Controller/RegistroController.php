@@ -22,17 +22,22 @@ class RegistroController extends AbstractController
 
         if ($request->isMethod('POST')) {
             // Obtener datos del formulario
+            $email = $request->request->get('email');
             $nombreUsuario = $request->request->get('nombre_usuario');
             $contrasena = $request->request->get('contrasena');
             
             // Verificar si el nombre de usuario ya existe
+            $emailExistente = $em->getRepository(Usuario::class)->findOneBy(['nombreUsuario' => $email]);
             $usuarioExistente = $em->getRepository(Usuario::class)->findOneBy(['nombreUsuario' => $nombreUsuario]);
             if ($usuarioExistente) {
                 // Si el nombre de usuario ya existe, asignar un mensaje de error
                 $error = 'El nombre de usuario ya está registrado.';
-            } else {
+            } elseif ($emailExistente) {
+                $error = 'El email ya está en uso.';
+            }else {
                 // Crear nuevo usuario
                 $usuario = new Usuario();
+                $usuario->setEmail($email);
                 $usuario->setNombreUsuario($nombreUsuario);
                 $usuario->setContrasena($passwordHasher->hashPassword($usuario, $contrasena)); // Hashear la contraseña
                 $usuario->setActivo(false);

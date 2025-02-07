@@ -1,0 +1,16 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Editar Perfil{% endblock %}
+
+{% block body %}
+    <h1>Editar Perfil</h1>
+
+    <form method="POST">
+        <label for="nombre_usuario">Nombre de Usuario:</label>
+        <input type="text" id="nombre_usuario" name="nombre_usuario" value="{{ usuario.nombreUsuario }}" required>
+        
+        <button type="submit">Guardar Cambios</button>
+    </form>
+
+    <a href="{{ path('ver_perfil', { id: usuario.id }) }}">Volver al Perfil</a>
+{% endblock %}

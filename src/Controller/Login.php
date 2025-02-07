@@ -16,13 +16,13 @@ class Login extends AbstractController
         $error = $authenticationUtils->getLastAuthenticationError();
         
         // Recupera el último nombre de usuario que se intentó
-        $lastUsername = $authenticationUtils->getLastUsername();
+        $lastEmail = $authenticationUtils->getLastUsername();
 
     
 
         // Renderiza la vista de login con el último nombre de usuario y cualquier error
         return $this->render('login.html.twig', [
-            'last_username' => $lastUsername,
+            'last_email' => $lastEmail,
             'error' => $error
         ]);
     } 

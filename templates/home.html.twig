@@ -6,6 +6,9 @@
     <h1>Bienvenido, {{ usuario.nombreUsuario }} 👋</h1>
     <p>Explora la red social y conéctate con otros usuarios.</p>
 
+    <!-- Sección de "Mi Perfil" -->
+    <p><a href="{{ path('ver_perfil', { id: usuario.id }) }}">👤 Mi Perfil</a></p>
+
     <h2>Lista de Usuarios</h2>
     <table border="1">
         <thead>
@@ -15,13 +18,15 @@
             </tr>
         </thead>
         <tbody>
-            {% for usuario in usuarios %}
-                <tr>
-                    <td>{{ usuario.nombreUsuario }}</td>
-                    <td>
-                        <a href="{{ path('ver_perfil', { id: usuario.id }) }}">Ver Perfil</a>
-                    </td>
-                </tr>
+            {% for u in usuarios %}
+                {% if u.id != usuario.id %} {# Excluye al usuario autenticado #}
+                    <tr>
+                        <td>{{ u.nombreUsuario }}</td>
+                        <td>
+                            <a href="{{ path('ver_perfil', { id: u.id }) }}">Ver Perfil</a>
+                        </td>
+                    </tr>
+                {% endif %}
             {% else %}
                 <tr>
                     <td colspan="2">No hay usuarios registrados.</td>
@@ -30,3 +35,4 @@
         </tbody>
     </table>
 {% endblock %}
+

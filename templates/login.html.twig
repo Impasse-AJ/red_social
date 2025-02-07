@@ -86,8 +86,8 @@
         {% endif %}
         <form method="post" action="{{ path('ctrl_login') }}">
             <div class="form-group">
-                <label for="username">Correo o Nombre de Usuario:</label>
-                <input type="text" id="username" name="_username" value="{{ last_username }}" required>
+                <label for="username">Correo Electronico:</label>
+                <input type="text" id="email" name="email" value="{{ last_email }}" required>
             </div>
             <div class="form-group">
                 <label for="password">Contraseña:</label>

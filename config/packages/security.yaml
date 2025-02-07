@@ -4,7 +4,7 @@ security:
         app_user_provider:
             entity:
                 class: App\Entity\Usuario  # Clase correcta
-                property: nombreUsuario    # Se usa 'nombreUsuario' en vez de 'email'
+                property: email    
     
     # Hasheo de las claves de los usuarios
     password_hashers:
@@ -24,6 +24,7 @@ security:
                 login_path: ctrl_login 
                 check_path: ctrl_login
                 default_target_path: ctrl_home
+                username_parameter: email  # <- Asegurar que aquí usamos 'email' 
             logout:
                 path: ctrl_logout 
                 target: ctrl_login
