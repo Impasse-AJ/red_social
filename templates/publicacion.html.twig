@@ -1,0 +1,32 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Publicación{% endblock %}
+
+{% block body %}
+    <h1>Publicación</h1>
+
+    <p>{{ publicacion.contenido }}</p>
+    <small>Publicado el {{ publicacion.fechaCreacion|date('d/m/Y H:i') }}</small>
+
+    <h2>Comentarios</h2>
+    {% if comentarios is empty %}
+        <p>No hay comentarios aún.</p>
+    {% else %}
+        <ul>
+            {% for comentario in comentarios %}
+                <li>
+                    <strong>{{ comentario.usuario.nombreUsuario }}</strong>: {{ comentario.contenido }}
+                    <small>({{ comentario.fechaCreacion|date('d/m/Y H:i') }})</small>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <h3>Agregar comentario</h3>
+    <form method="POST" action="{{ path('comentar_publicacion', { id: publicacion.id }) }}">
+        <textarea name="contenido" required placeholder="Escribe un comentario..."></textarea><br>
+        <button type="submit">Comentar</button>
+    </form>
+
+    <a href="{{ path('ver_perfil', { id: publicacion.usuario.id }) }}" class="btn btn-primary">🔙 Volver al perfil</a>
+{% endblock %}
