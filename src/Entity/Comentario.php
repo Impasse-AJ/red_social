@@ -73,4 +73,9 @@ class Comentario
     {
         return $this->fechaCreacion;
     }
+    public function setFechaCreacion(\DateTime $fecha): self
+    {
+        $this->fechaCreacion = $fecha;
+        return $this;
+    }
 }

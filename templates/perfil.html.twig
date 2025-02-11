@@ -149,6 +149,8 @@ small {
                 <li>
                     <p>{{ publicacion.contenido }}</p>
                     <small>Publicado el {{ publicacion.fechaCreacion|date('d/m/Y H:i') }}</small>
+                    <br>
+                    <a href="{{ path('ver_publicacion', { id: publicacion.id }) }}">💬 Ver comentarios</a>
                 </li>
             {% endfor %}
         </ul>
