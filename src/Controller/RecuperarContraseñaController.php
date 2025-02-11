@@ -16,14 +16,14 @@ use function PHPSTORM_META\map;
 class RecuperarContraseñaController extends AbstractController
 {
     #[Route('/recuperar-password', name: 'recuperar_password')]
-    public function mostrarFormulario()
+    public function mostrarFormulario(Request $request)
     {
         return $this->render('recuperar_password.html.twig', [
             'success' => null,
             'error' => null
         ]);
     }
-
+    
     #[Route('/procesar-recuperacion', name: 'procesar_recuperacion', methods: ['POST'])]
     public function procesarRecuperacion(
         Request $request,
@@ -31,50 +31,49 @@ class RecuperarContraseñaController extends AbstractController
         MailerInterface $mailer
     ) {
         $email = $request->request->get('email');
-
+    
         // Buscar usuario en la base de datos
-        $usuario = $entityManager->getRepository(Usuario::class)->findOneBy(['nombreUsuario' => $email]);
-
+        $usuario = $entityManager->getRepository(Usuario::class)->findOneBy(['email' => $email]);
+    
         if (!$usuario) {
             return $this->render('recuperar_password.html.twig', [
                 'error' => 'No existe una cuenta asociada a este correo.',
+                'success' => null
             ]);
         }
-
-        //use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-
+    
         // Generar un código de recuperación aleatorio y hashearlo
         $codigoRecuperacion = random_int(100000, 999999);
         $codigoHasheado = md5($codigoRecuperacion);
         $usuario->setCodigoRecuperacion($codigoHasheado);
-
+    
         // Guardar el código en la base de datos
         $entityManager->persist($usuario);
         $entityManager->flush();
-
+    
         // Generar la URL absoluta para el restablecimiento de contraseña
         $urlRecuperacion = $this->generateUrl(
             'restablecer_password',
             ['codigo' => $codigoRecuperacion], // Se pasará el código en la URL
             UrlGeneratorInterface::ABSOLUTE_URL // 🔥 Asegura la URL completa
         );
-
+    
         // Enviar correo con el enlace de recuperación
         $emailMessage = (new Email())
             ->from('no-reply@empresa.com')
-            ->to($usuario->getNombreUsuario())
+            ->to($usuario->getEmail())
             ->subject('Restablecer tu Contraseña')
             ->html("<p>Haz clic en el siguiente enlace para restablecer tu contraseña:</p>
             <a href='" . $urlRecuperacion . "'>Restablecer Contraseña</a>");
-
+    
         $mailer->send($emailMessage);
-
-
+    
         return $this->render('recuperar_password.html.twig', [
-            'error' => null,
             'success' => 'Se ha enviado un código de recuperación a tu correo.',
+            'error' => null
         ]);
     }
+    
     #[Route('/restablecer-password/{codigo}', name: 'restablecer_password')]
     public function mostrarRestablecerFormulario($codigo, EntityManagerInterface $entityManager)
     {
@@ -108,7 +107,7 @@ class RecuperarContraseñaController extends AbstractController
                 'codigo' => null
             ]);
         }
-
+        
         $usuario->setContrasena(password_hash($nuevaContrasena, PASSWORD_BCRYPT));
         $usuario->setCodigoRecuperacion(null); // Se elimina el código de recuperación
 
