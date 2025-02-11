@@ -11,6 +11,7 @@ body {
     margin: 0;
     padding: 20px;
     text-align: center;
+    position: relative;
 }
 
 h1 {
@@ -58,15 +59,53 @@ th {
 tr:hover {
     background-color: #f1f1f1;
 }
+
+/* Estilos del botón de logout */
+.logout-container {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+}
+
+.logout-btn {
+    display: flex;
+    align-items: center;
+    background-color: #dc3545;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.logout-btn:hover {
+    background-color: #c82333;
+    transform: scale(1.05);
+}
+
+.logout-btn i {
+    margin-right: 8px;
+}
 </style>
 {% endblock %}
 
 {% block body %}
+    <!-- Botón de Logout en la parte superior derecha -->
+    <div class="logout-container">
+        <a href="{{ path('ctrl_logout') }}" class="logout-btn">
+            🚪 Cerrar Sesión
+        </a>
+    </div>
+
     <h1>Bienvenido, {{ usuario.nombreUsuario }} 👋</h1>
     <p>Explora la red social y conéctate con otros usuarios.</p>
 
     <!-- Sección de "Mi Perfil" -->
-    <p><a href="{{ path('ver_perfil', { id: usuario.id }) }}">👤 Mi Perfil</a></p>
+    <p>
+        <a href="{{ path('ver_perfil', { id: usuario.id }) }}">👤 Mi Perfil</a>
+    </p>
 
     <h2>Lista de Usuarios</h2>
     <table>
@@ -94,5 +133,6 @@ tr:hover {
         </tbody>
     </table>
 {% endblock %}
+
 
 
