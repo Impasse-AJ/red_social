@@ -33,12 +33,6 @@
                 <li>
                     <p>{{ publicacion.contenido }}</p>
                     <small>Publicado el {{ publicacion.fechaCreacion|date('d/m/Y H:i') }}</small>
-                    
-                    {# {% if propietario %}
-                        <form method="POST" action="{{ path('eliminar_publicacion', { id: publicacion.id }) }}">
-                            <button type="submit" onclick="return confirm('¿Seguro que quieres eliminar esta publicación?')">❌ Eliminar</button>
-                        </form>
-                    {% endif %} #}
                 </li>
             {% endfor %}
         </ul>
