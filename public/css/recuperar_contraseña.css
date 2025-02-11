@@ -42,6 +42,7 @@ input[type="email"] {
     padding: 12px;
     border: 1px solid #ddd;
     border-radius: 6px;
+    padding-right: 0px;
     font-size: 14px;
     color: #333;
     background-color: #f9f9f9;
