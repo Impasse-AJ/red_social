@@ -2,6 +2,65 @@
 
 {% block title %}Bienvenido - Red Social{% endblock %}
 
+{% block styles %}
+<style>
+/* Estilos generales */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 20px;
+    text-align: center;
+}
+
+h1 {
+    color: #333;
+}
+
+p {
+    font-size: 18px;
+    color: #555;
+}
+
+/* Estilos para enlaces */
+a {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Estilos de tabla */
+table {
+    width: 80%;
+    margin: 20px auto;
+    border-collapse: collapse;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+th, td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+th {
+    background-color: #007bff;
+    color: white;
+}
+
+tr:hover {
+    background-color: #f1f1f1;
+}
+</style>
+{% endblock %}
+
 {% block body %}
     <h1>Bienvenido, {{ usuario.nombreUsuario }} 👋</h1>
     <p>Explora la red social y conéctate con otros usuarios.</p>
@@ -10,7 +69,7 @@
     <p><a href="{{ path('ver_perfil', { id: usuario.id }) }}">👤 Mi Perfil</a></p>
 
     <h2>Lista de Usuarios</h2>
-    <table border="1">
+    <table>
         <thead>
             <tr>
                 <th>Nombre de Usuario</th>
@@ -35,4 +94,5 @@
         </tbody>
     </table>
 {% endblock %}
+
 
