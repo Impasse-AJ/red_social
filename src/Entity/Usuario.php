@@ -37,6 +37,7 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
     public function __construct()
     {
         $this->fechaCreacion = new \DateTime();
+        $this->fotoPerfil = 'default-profile-picture.jpg';
     }
 
     // Getters y Setters

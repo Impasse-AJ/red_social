@@ -4,42 +4,68 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registro</title>
- <link rel="stylesheet" href="{{ asset('css/registro.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/registro.css') }}">
 </head>
 <body>
     <div class="registro-container">
-        {% if success %}
-            <!-- Mostrar mensaje de éxito -->
-            <p class="success">{{ success }}</p>
-            <p> <a href="{{ path('ctrl_login') }}">Ahora puedes ir al login para iniciar sesión.</a> </p>
-        {% elseif error %}
-            <!-- Mostrar mensaje de error -->
-            <p class="error">{{ error }}</p>
-            <p><a href="{{ path('registro') }}">Volver a intentarlo.</a> </p>
-        {% else %}
-            <h1>Registro</h1>
-            <form method="post" action="{{ path('registro') }}">
-                <!-- Campo de Nombre de Usuario -->
-                <div class="form-group">
-                    <label for="email">Correo Electrónico:</label>
-                    <input type="text" id="email" name="email" required>
-                    <label for="nombre_usuario">Nombre de Usuario:</label>
-                    <input type="text" id="nombre_usuario" name="nombre_usuario" required>
-                </div>
+        <h1>Registro</h1>
 
-                <!-- Campo de Contraseña -->
-                <div class="form-group">
-                    <label for="contrasena">Contraseña:</label>
-                    <input type="password" id="contrasena" name="contrasena" required>
-                </div>
+        <div id="mensaje"></div>
 
-                <!-- Botón de Registro -->
-                <button type="submit">Registrarse</button>
-            </form>
-        {% endif %}
+        <form id="registroForm">
+            <div class="form-group">
+                <label for="email">Correo Electrónico:</label>
+                <input type="text" id="email" name="email" required>
+                
+                <label for="nombre_usuario">Nombre de Usuario:</label>
+                <input type="text" id="nombre_usuario" name="nombre_usuario" required>
+            </div>
+
+            <div class="form-group">
+                <label for="contrasena">Contraseña:</label>
+                <input type="password" id="contrasena" name="contrasena" required>
+            </div>
+
+            <button type="submit">Registrarse</button>
+        </form>
     </div>
+
+    <script>
+        document.getElementById("registroForm").addEventListener("submit", function(event) {
+            event.preventDefault(); //Fe Evitar recarga de la página
+
+            let email = document.getElementById("email").value;
+            let nombreUsuario = document.getElementById("nombre_usuario").value;
+            let contrasena = document.getElementById("contrasena").value;
+
+            fetch("{{ path('registro') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    email: email,
+                    nombre_usuario: nombreUsuario,
+                    contrasena: contrasena
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                let mensajeDiv = document.getElementById("mensaje");
+                if (data.success) {
+                    mensajeDiv.innerHTML = `<p class="success">${data.success}</p>
+                                            <p><a href="{{ path('ctrl_login') }}">Ir al login</a></p>`;
+                    document.getElementById("registroForm").reset();
+                } else if (data.error) {
+                    mensajeDiv.innerHTML = `<p class="error">${data.error}</p>`;
+                }
+            })
+            .catch(error => console.error("Error en la petición AJAX:", error));
+        });
+    </script>
 </body>
 </html>
+
 
 
 
