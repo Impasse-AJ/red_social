@@ -9,6 +9,11 @@
 
     {% if usuario.fotoPerfil %}
         <img src="{{ asset('uploads/' ~ usuario.fotoPerfil) }}" alt="Foto de perfil">
+        {% if propietario %}
+            <form method="POST" action="{{ path('quitar_foto_perfil', { id: usuario.id }) }}">
+                <button type="submit">❌ Quitar foto</button>
+            </form>
+        {% endif %}
     {% endif %}
 
     {% if propietario %}
@@ -44,3 +49,4 @@
 </div>
 
 {% endblock %}
+
