@@ -11,14 +11,19 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class RegistroController extends AbstractController
 {
     #[Route('/registro', name: 'registro')]
-    public function register(Request $request, EntityManagerInterface $em, MailerInterface $mailer, UserPasswordHasherInterface $passwordHasher): Response
-    {
-        $success = null; // Inicializamos la variable success
-        $error = null;   // Inicializamos la variable error
+    public function register(
+        Request $request, 
+        EntityManagerInterface $em, 
+        MailerInterface $mailer, 
+        UserPasswordHasherInterface $passwordHasher
+    ): Response {
+        $success = null;
+        $error = null;
 
         if ($request->isMethod('POST')) {
             // Obtener datos del formulario
@@ -26,46 +31,54 @@ class RegistroController extends AbstractController
             $nombreUsuario = $request->request->get('nombre_usuario');
             $contrasena = $request->request->get('contrasena');
             
-            // Verificar si el nombre de usuario ya existe
-            $emailExistente = $em->getRepository(Usuario::class)->findOneBy(['nombreUsuario' => $email]);
+            // Verificar si el nombre de usuario o email ya existen
+            $emailExistente = $em->getRepository(Usuario::class)->findOneBy(['email' => $email]);
             $usuarioExistente = $em->getRepository(Usuario::class)->findOneBy(['nombreUsuario' => $nombreUsuario]);
+
             if ($usuarioExistente) {
-                // Si el nombre de usuario ya existe, asignar un mensaje de error
                 $error = 'El nombre de usuario ya está registrado.';
             } elseif ($emailExistente) {
                 $error = 'El email ya está en uso.';
-            }else {
+            } else {
                 // Crear nuevo usuario
                 $usuario = new Usuario();
                 $usuario->setEmail($email);
                 $usuario->setNombreUsuario($nombreUsuario);
-                $usuario->setContrasena($passwordHasher->hashPassword($usuario, $contrasena)); // Hashear la contraseña
+                $usuario->setContrasena($passwordHasher->hashPassword($usuario, $contrasena)); 
                 $usuario->setActivo(false);
-                
-                // Persistir el usuario
-                $em->persist($usuario);
-                $em->flush();
-                
+
+                try {
+                    $em->persist($usuario);
+                    $em->flush();
+                } catch (\Exception $e) {
+                    return new Response('Error al guardar en la base de datos: ' . $e->getMessage());
+                }
+
+                // Generar el enlace de activación
+                $urlActivacion = $this->generateUrl(
+                    'activar_cuenta', 
+                    ['id' => $usuario->getId()], 
+                    UrlGeneratorInterface::ABSOLUTE_URL
+                );
+
                 // Intentar enviar el correo
                 try {
                     $emailMessage = (new Email())
                         ->from('noreply@redsocial.com')
-                        ->to('tu_correo@ejemplo.com') // Usa un email real para pruebas
+                        ->to($email)
                         ->subject('Activa tu cuenta')
                         ->html('<p>Hola, activa tu cuenta haciendo clic en el siguiente enlace: </p>
-                               <a href="' . $this->generateUrl('activar_cuenta', ['id' => $usuario->getId()], 0) . '">Activar Cuenta</a>');
+                               <a href="' . $urlActivacion . '">Activar Cuenta</a>');
                 
                     $mailer->send($emailMessage);
                     
-                    // Si el correo se envió correctamente, mostramos el mensaje de éxito
-                    $success = 'Se ha enviado un correo de confirmación. Revisa tu correo y usa el código de recuperación.';
+                    $success = 'Se ha enviado un correo de confirmación. Revisa tu correo y activa tu cuenta.';
                 } catch (\Exception $e) {
                     return new Response('Error al enviar el correo: ' . $e->getMessage());
                 }
             }
         }
 
-        // Pasar las variables success y error al template
         return $this->render('registro.html.twig', ['success' => $success, 'error' => $error]);
     }
 
@@ -74,22 +87,17 @@ class RegistroController extends AbstractController
     {
         $usuario = $em->getRepository(Usuario::class)->find($id);
         
-        if (!$usuario || $usuario->getActivo()) {
-            throw $this->createNotFoundException('Cuenta inválida o ya activada.');
+        if (!$usuario) {
+            throw $this->createNotFoundException('Cuenta no encontrada.');
+        }
+
+        if ($usuario->getActivo()) {
+            return $this->redirectToRoute('ctrl_login', ['error' => 'Tu cuenta ya está activada.']);
         }
         
-        // Activar la cuenta del usuario
         $usuario->setActivo(true);
         $em->flush();
         
         return $this->redirectToRoute('ctrl_login');
     }
 }
-
-
-
-
-
-
-
-

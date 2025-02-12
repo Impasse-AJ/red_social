@@ -15,7 +15,7 @@
         {% elseif error %}
             <!-- Mostrar mensaje de error -->
             <p class="error">{{ error }}</p>
-            <p><a href="{{ path('registro') }}">registro para volver a intentarlo.</a> </p>
+            <p><a href="{{ path('registro') }}">Volver a intentarlo.</a> </p>
         {% else %}
             <h1>Registro</h1>
             <form method="post" action="{{ path('registro') }}">
