@@ -10,6 +10,7 @@ use App\Entity\Usuario;
 use App\Entity\Publicacion;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Filesystem\Filesystem;
 
 class PerfilController extends AbstractController
 {
@@ -112,4 +113,29 @@ class PerfilController extends AbstractController
             'usuario' => $usuario,
         ]);
     }
+    #[Route('/perfil/{id}/quitar-foto', name: 'quitar_foto_perfil', methods: ['POST'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    public function quitarFotoPerfil(int $id, EntityManagerInterface $entityManager): Response
+    {
+        $usuario = $entityManager->getRepository(Usuario::class)->find($id);
+
+        if (!$usuario || $this->getUser()->getId() !== $usuario->getId()) {
+            throw $this->createAccessDeniedException("No puedes modificar esta foto de perfil.");
+        }
+
+        if ($usuario->getFotoPerfil()) {
+            $filesystem = new Filesystem();
+            $rutaFoto = $this->getParameter('foto_perfil_directorio') . '/' . $usuario->getFotoPerfil();
+            
+            if ($filesystem->exists($rutaFoto)) {
+                $filesystem->remove($rutaFoto);
+            }
+
+            $usuario->setFotoPerfil(null);
+            $entityManager->flush();
+        }
+
+        return $this->redirectToRoute('ver_perfil', ['id' => $id]);
+    }
 }
+
