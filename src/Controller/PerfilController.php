@@ -11,6 +11,7 @@ use App\Entity\Publicacion;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Filesystem\Filesystem;
+use App\Entity\Amistad;
 
 class PerfilController extends AbstractController
 {
@@ -19,22 +20,59 @@ class PerfilController extends AbstractController
     public function verPerfil(int $id, EntityManagerInterface $entityManager): Response
     {
         $usuario = $entityManager->getRepository(Usuario::class)->find($id);
-
+        $usuarioActual = $this->getUser();
+    
         if (!$usuario) {
             throw $this->createNotFoundException("El usuario no existe.");
         }
-
+    
+        // 📌 Comprobar si son amigos
+        $amistad = $entityManager->getRepository(Amistad::class)->findOneBy([
+            'solicitante' => $usuarioActual,
+            'receptor' => $usuario,
+            'estado' => 'aceptada'
+        ]) ?? $entityManager->getRepository(Amistad::class)->findOneBy([
+            'solicitante' => $usuario,
+            'receptor' => $usuarioActual,
+            'estado' => 'aceptada'
+        ]);
+    
+        $esAmigo = $amistad !== null;
+        $propietario = $usuarioActual->getId() === $usuario->getId(); // 📌 Es su propio perfil
+    
+        // 📌 Comprobar si ya hay una solicitud pendiente
+        $solicitudPendiente = $entityManager->getRepository(Amistad::class)->findOneBy([
+            'solicitante' => $usuarioActual,
+            'receptor' => $usuario,
+            'estado' => 'pendiente'
+        ]);
+    
+        // 🔒 Si NO es amigo y NO es su perfil → No mostrar publicaciones
+        if (!$esAmigo && !$propietario) {
+            return $this->render('perfil.html.twig', [
+                'usuario' => $usuario,
+                'publicaciones' => [],
+                'propietario' => false,
+                'privado' => true, // 🚫 Mostrar mensaje de perfil privado
+                'solicitudPendiente' => $solicitudPendiente !== null, // 📌 Saber si ya se envió solicitud
+            ]);
+        }
+    
+        // 🔓 Si es amigo o es su perfil → Mostrar publicaciones
         $publicaciones = $entityManager->getRepository(Publicacion::class)->findBy(
             ['usuario' => $usuario],
             ['fechaCreacion' => 'DESC'] // 📌 Ordenar publicaciones por fecha
         );
-
+    
         return $this->render('perfil.html.twig', [
             'usuario' => $usuario,
             'publicaciones' => $publicaciones,
-            'propietario' => $this->getUser()->getId() === $usuario->getId(), // 📌 Saber si es su perfil
+            'propietario' => $propietario,
+            'privado' => false, // ✅ Puede ver el perfil
+            'solicitudPendiente' => $solicitudPendiente !== null, // 📌 Saber si ya se envió solicitud
         ]);
     }
+    
 
     #[Route('/perfil/{id}/nueva-publicacion', name: 'nueva_publicacion', methods: ['POST'])]
     #[IsGranted('IS_AUTHENTICATED_FULLY')] // 🔐 Solo usuarios autenticados

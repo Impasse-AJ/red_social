@@ -1,0 +1,31 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Solicitudes de Amistad{% endblock %}
+
+{% block body %}
+    <h1>Solicitudes de Amistad</h1>
+
+    {% if solicitudes is empty %}
+        <p>No tienes solicitudes de amistad pendientes.</p>
+    {% else %}
+        <ul>
+            {% for solicitud in solicitudes %}
+                <li>
+                    <strong>{{ solicitud.solicitante.nombreUsuario }}</strong> te ha enviado una solicitud de amistad.
+                    
+                    <form method="POST" action="{{ path('responder_solicitud', { id: solicitud.id }) }}" style="display:inline;">
+                        <input type="hidden" name="accion" value="aceptar">
+                        <button type="submit" class="btn-aceptar">Aceptar ✅</button>
+                    </form>
+
+                    <form method="POST" action="{{ path('responder_solicitud', { id: solicitud.id }) }}" style="display:inline;">
+                        <input type="hidden" name="accion" value="rechazar">
+                        <button type="submit" class="btn-rechazar">Rechazar ❌</button>
+                    </form>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <a href="{{ path('ctrl_home') }}" class="btn">🏠 Volver al inicio</a>
+{% endblock %}

@@ -40,16 +40,14 @@ CREATE TABLE `comentarios` (
   FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE
 );
 
--- Estructura de tabla para la tabla `reacciones`
-CREATE TABLE `reacciones` (
-  `id` INT NOT NULL AUTO_INCREMENT,
-  `id_publicacion` INT NOT NULL,
-  `id_usuario` INT NOT NULL,
-  `tipo` VARCHAR(255) NOT NULL,
-  `fecha_creacion` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(),
-  PRIMARY KEY (`id`),
-  FOREIGN KEY (`id_publicacion`) REFERENCES `publicaciones` (`id`) ON DELETE CASCADE,
-  FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE
+-- Estructura de tabla para la tabla `amistades`
+CREATE TABLE amistades (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    id_solicitante INT NOT NULL,
+    id_receptor INT NOT NULL,
+    estado ENUM('ninguna','pendiente', 'aceptada', 'rechazada') NOT NULL DEFAULT 'ninguna',
+    FOREIGN KEY (id_solicitante) REFERENCES usuarios(id) ON DELETE CASCADE,
+    FOREIGN KEY (id_receptor) REFERENCES usuarios(id) ON DELETE CASCADE
 );
 
 -- Insertar usuarios de prueba con contraseña hasheada (1234)

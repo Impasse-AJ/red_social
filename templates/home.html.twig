@@ -17,6 +17,16 @@
     <h1>Bienvenido, {{ usuario.nombreUsuario }} 👋</h1>
     <p>Explora la red social y conéctate con otros usuarios.</p>
 
+    <!-- 📌 Botón de Solicitudes de Amistad -->
+    <div class="solicitudes-container">
+        <a href="{{ path('ver_solicitudes') }}" class="btn-solicitudes">
+            📩 Solicitudes de Amistad 
+            {% if solicitudesPendientes > 0 %}
+                <span class="badge">{{ solicitudesPendientes }}</span>
+            {% endif %}
+        </a>
+    </div>
+
     <!-- Sección de "Mi Perfil" -->
     <p>
         <a href="{{ path('ver_perfil', { id: usuario.id }) }}">👤 Mi Perfil</a>
@@ -48,6 +58,3 @@
         </tbody>
     </table>
 {% endblock %}
-
-
-

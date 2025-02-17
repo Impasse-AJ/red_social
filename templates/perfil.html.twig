@@ -19,34 +19,51 @@
     {% if propietario %}
         <a href="{{ path('subir_foto_perfil', { id: usuario.id }) }}">📸 Subir Foto</a>
         <a href="{{ path('editar_perfil', { id: usuario.id }) }}">✏️ Editar Perfil</a>
-    {% endif %}
-
-    <h2>Publicaciones</h2>
-    {% if propietario %}
-        <h3>Publicar nuevo mensaje</h3>
-        <form method="POST" action="{{ path('nueva_publicacion', { id: usuario.id }) }}">
-            <textarea name="contenido" required placeholder="Escribe algo..."></textarea>
-            <button type="submit">Publicar</button>
-        </form>
-    {% endif %}
-
-    {% if publicaciones is empty %}
-        <p>No hay publicaciones aún.</p>
     {% else %}
-        <ul>
-            {% for publicacion in publicaciones %}
-                <li>
-                    <p>{{ publicacion.contenido }}</p>
-                    <small>Publicado el {{ publicacion.fechaCreacion|date('d/m/Y H:i') }}</small>
-                    <br>
-                    <a href="{{ path('ver_publicacion', { id: publicacion.id }) }}">💬 Ver comentarios</a>
-                </li>
-            {% endfor %}
-        </ul>
+        <!-- 🔥 Sección de Amistad -->
+        {% if solicitudPendiente == 'ninguna' %}
+            <form method="POST" action="{{ path('enviar_solicitud', { id: usuario.id }) }}">
+                <button type="submit">➕ Seguir</button>
+            </form>
+        {% elseif solicitudPendiente == 'pendiente' %}
+            <p>⏳ Solicitud Enviada</p>
+        {% elseif solicitudPendiente == 'aceptada' %}
+            <form method="POST" action="{{ path('eliminar_amistad', { id: usuario.id }) }}">
+                <button type="submit">❌ Dejar de seguir</button>
+            </form>
+        {% endif %}
+    {% endif %}
+
+    <!-- 🔥 Publicaciones (solo si son amigos) -->
+    {% if propietario or solicitudPendiente == 'aceptada' %}
+        <h2>Publicaciones</h2>
+        {% if propietario %}
+            <h3>Publicar nuevo mensaje</h3>
+            <form method="POST" action="{{ path('nueva_publicacion', { id: usuario.id }) }}">
+                <textarea name="contenido" required placeholder="Escribe algo..."></textarea>
+                <button type="submit">Publicar</button>
+            </form>
+        {% endif %}
+
+        {% if publicaciones is empty %}
+            <p>No hay publicaciones aún.</p>
+        {% else %}
+            <ul>
+                {% for publicacion in publicaciones %}
+                    <li>
+                        <p>{{ publicacion.contenido }}</p>
+                        <small>Publicado el {{ publicacion.fechaCreacion|date('d/m/Y H:i') }}</small>
+                        <br>
+                        <a href="{{ path('ver_publicacion', { id: publicacion.id }) }}">💬 Ver comentarios</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% else %}
+        <p>🔒 Debes ser amigo de {{ usuario.nombreUsuario }} para ver sus publicaciones.</p>
     {% endif %}
 
     <a href="{{ path('ctrl_home') }}" class="btn">🏠 Volver al inicio</a>
 </div>
 
 {% endblock %}
-
