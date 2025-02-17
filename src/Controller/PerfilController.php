@@ -40,12 +40,21 @@ class PerfilController extends AbstractController
         $esAmigo = $amistad !== null;
         $propietario = $usuarioActual->getId() === $usuario->getId(); // 📌 Es su propio perfil
     
-        // 📌 Comprobar si ya hay una solicitud pendiente
-        $solicitudPendiente = $entityManager->getRepository(Amistad::class)->findOneBy([
+        // 📌 Comprobar el estado de la solicitud de amistad
+        $solicitud = $entityManager->getRepository(Amistad::class)->findOneBy([
             'solicitante' => $usuarioActual,
-            'receptor' => $usuario,
-            'estado' => 'pendiente'
+            'receptor' => $usuario
         ]);
+    
+        if (!$solicitud) {
+            $solicitudPendiente = 'ninguna'; // No se ha enviado solicitud
+        } elseif ($solicitud->getEstado() === 'pendiente') {
+            $solicitudPendiente = 'pendiente'; // La solicitud está pendiente
+        } elseif ($solicitud->getEstado() === 'aceptada') {
+            $solicitudPendiente = 'aceptada'; // Ya son amigos
+        } else {
+            $solicitudPendiente = 'ninguna'; // Caso por defecto
+        }
     
         // 🔒 Si NO es amigo y NO es su perfil → No mostrar publicaciones
         if (!$esAmigo && !$propietario) {
@@ -54,7 +63,7 @@ class PerfilController extends AbstractController
                 'publicaciones' => [],
                 'propietario' => false,
                 'privado' => true, // 🚫 Mostrar mensaje de perfil privado
-                'solicitudPendiente' => $solicitudPendiente !== null, // 📌 Saber si ya se envió solicitud
+                'solicitudPendiente' => $solicitudPendiente, // 📌 Pasamos el estado correcto
             ]);
         }
     
@@ -69,7 +78,7 @@ class PerfilController extends AbstractController
             'publicaciones' => $publicaciones,
             'propietario' => $propietario,
             'privado' => false, // ✅ Puede ver el perfil
-            'solicitudPendiente' => $solicitudPendiente !== null, // 📌 Saber si ya se envió solicitud
+            'solicitudPendiente' => $solicitudPendiente, // 📌 Pasamos el estado correcto
         ]);
     }
     
