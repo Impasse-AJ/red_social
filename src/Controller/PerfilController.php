@@ -46,16 +46,17 @@ class PerfilController extends AbstractController
             'receptor' => $usuario
         ]);
     
-        if (!$solicitud) {
-            $solicitudPendiente = 'ninguna'; // No se ha enviado solicitud
-        } elseif ($solicitud->getEstado() === 'pendiente') {
-            $solicitudPendiente = 'pendiente'; // La solicitud está pendiente
-        } elseif ($solicitud->getEstado() === 'aceptada') {
-            $solicitudPendiente = 'aceptada'; // Ya son amigos
-        } else {
-            $solicitudPendiente = 'ninguna'; // Caso por defecto
+        switch ($solicitud?->getEstado()) { 
+            case 'pendiente':
+                $solicitudPendiente = 'pendiente';
+                break;
+            case 'aceptada':
+                $solicitudPendiente = 'aceptada';
+                break;
+            default:
+                $solicitudPendiente = 'ninguna';
         }
-    
+        
         // 🔒 Si NO es amigo y NO es su perfil → No mostrar publicaciones
         if (!$esAmigo && !$propietario) {
             return $this->render('perfil.html.twig', [
