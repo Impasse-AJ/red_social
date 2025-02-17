@@ -8,6 +8,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\Usuario;
 use App\Entity\Publicacion;
+use App\Entity\Amistad;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Filesystem\Filesystem;
@@ -137,5 +138,99 @@ class PerfilController extends AbstractController
 
         return $this->redirectToRoute('ver_perfil', ['id' => $id]);
     }
+    // Enviar solicitud de amistad
+    #[Route('/perfil/{id}/solicitar-amistad', name: 'solicitar_amistad', methods: ['POST'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    public function solicitarAmistad(int $id, EntityManagerInterface $entityManager): Response
+    {
+        $usuarioA = $this->getUser();
+        $usuarioB = $entityManager->getRepository(Usuario::class)->find($id);
+
+        if (!$usuarioB || $usuarioA->getId() === $usuarioB->getId()) {
+            throw $this->createAccessDeniedException("No puedes solicitar amistad a ti mismo.");
+        }
+
+        // Verificar si ya existe una solicitud
+        $amistad = $entityManager->getRepository(Amistad::class)->findOneBy([
+            'usuarioA' => $usuarioA,
+            'usuarioB' => $usuarioB,
+        ]);
+
+        if ($amistad) {
+            // Si ya existe una solicitud, no hacer nada o devolver mensaje
+            return $this->redirectToRoute('ver_perfil', ['id' => $id]);
+        }
+
+        // Crear nueva solicitud de amistad
+        $amistad = new Amistad();
+        $amistad->setUsuarioA($usuarioA);
+        $amistad->setUsuarioB($usuarioB);
+
+        $entityManager->persist($amistad);
+        $entityManager->flush();
+
+        return $this->redirectToRoute('ver_perfil', ['id' => $id]);
+    }
+
+    // Aceptar solicitud de amistad
+    #[Route('/perfil/{id}/aceptar-amistad', name: 'aceptar_amistad', methods: ['POST'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    public function aceptarAmistad(int $id, EntityManagerInterface $entityManager): Response
+    {
+        $usuarioA = $this->getUser();
+        $usuarioB = $entityManager->getRepository(Usuario::class)->find($id);
+
+        if (!$usuarioB || $usuarioA->getId() === $usuarioB->getId()) {
+            throw $this->createAccessDeniedException("No puedes aceptar esta solicitud.");
+        }
+
+        // Buscar la solicitud de amistad pendiente
+        $amistad = $entityManager->getRepository(Amistad::class)->findOneBy([
+            'usuarioA' => $usuarioB,
+            'usuarioB' => $usuarioA,
+            'aceptada' => false,
+        ]);
+
+        if ($amistad) {
+            $amistad->setAceptada(true);
+            $entityManager->flush();
+        }
+
+        return $this->redirectToRoute('ver_perfil', ['id' => $id]);
+    }
+
+    // Eliminar amistad
+    #[Route('/perfil/{id}/eliminar-amistad', name: 'eliminar_amistad', methods: ['POST'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    public function eliminarAmistad(int $id, EntityManagerInterface $entityManager): Response
+    {
+        $usuarioA = $this->getUser();
+        $usuarioB = $entityManager->getRepository(Usuario::class)->find($id);
+
+        if (!$usuarioB || $usuarioA->getId() === $usuarioB->getId()) {
+            throw $this->createAccessDeniedException("No puedes eliminar esta amistad.");
+        }
+
+        // Buscar la amistad existente
+        $amistad = $entityManager->getRepository(Amistad::class)->findOneBy([
+            'usuarioA' => $usuarioA,
+            'usuarioB' => $usuarioB,
+        ]);
+
+        if (!$amistad) {
+            $amistad = $entityManager->getRepository(Amistad::class)->findOneBy([
+                'usuarioA' => $usuarioB,
+                'usuarioB' => $usuarioA,
+            ]);
+        }
+
+        if ($amistad) {
+            $entityManager->remove($amistad);
+            $entityManager->flush();
+        }
+
+        return $this->redirectToRoute('ver_perfil', ['id' => $id]);
+    }
+
 }
 

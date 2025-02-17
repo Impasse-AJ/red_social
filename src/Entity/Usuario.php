@@ -4,6 +4,8 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'usuarios')]
@@ -22,6 +24,7 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(name: 'contrasena', type: 'string')]
     private string $contrasena;
+
     #[ORM\Column(name: 'foto_perfil', type: 'string', nullable: true)]
     private ?string $fotoPerfil = null;
 
@@ -34,27 +37,38 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(name: 'activo', type: 'boolean')]
     private bool $activo = false;
 
+    // Relación de amistades
+    #[ORM\OneToMany(mappedBy: 'usuarioA', targetEntity: Amistad::class)]
+    private Collection $amistadesEnviadas;
+
+    #[ORM\OneToMany(mappedBy: 'usuarioB', targetEntity: Amistad::class)]
+    private Collection $amistadesRecibidas;
+
     public function __construct()
     {
         $this->fechaCreacion = new \DateTime();
         $this->fotoPerfil = 'default-profile-picture.jpg';
+        $this->amistadesEnviadas = new ArrayCollection();
+        $this->amistadesRecibidas = new ArrayCollection();
     }
 
-    // Getters y Setters
+    // Getters y Setters para amistades
+    public function getAmistadesEnviadas(): Collection
+    {
+        return $this->amistadesEnviadas;
+    }
+
+    public function getAmistadesRecibidas(): Collection
+    {
+        return $this->amistadesRecibidas;
+    }
+
+    // Otros getters y setters permanecen igual...
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    public function getFotoPerfil(): ?string
-    {
-        return $this->fotoPerfil;
-    }
-    public function setFotoPerfil(?string $fotoPerfil): self
-    {
-        $this->fotoPerfil = $fotoPerfil;
-        return $this;
-    }
     public function getEmail(): string
     {
         return $this->email;
@@ -88,9 +102,29 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    public function getFotoPerfil(): ?string
+    {
+        return $this->fotoPerfil;
+    }
+
+    public function setFotoPerfil(?string $fotoPerfil): self
+    {
+        $this->fotoPerfil = $fotoPerfil;
+        return $this;
+    }
+
     public function getFechaCreacion(): \DateTime
     {
         return $this->fechaCreacion;
+    }
+        public function estaAmistadEnviada(Usuario $usuario): bool
+    {
+        return $this->amistadesEnviadas->exists(fn($key, $amistad) => $amistad->getUsuarioB() === $usuario && !$amistad->isAceptada());
+    }
+
+    public function estaAmistadRecibida(Usuario $usuario): bool
+    {
+    return $this->amistadesRecibidas->exists(fn($key, $amistad) => $amistad->getUsuarioA() === $usuario && !$amistad->isAceptada());
     }
 
     public function getCodigoRecuperacion(): ?string

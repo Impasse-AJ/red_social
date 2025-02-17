@@ -28,6 +28,7 @@
             <tr>
                 <th>Nombre de Usuario</th>
                 <th>Perfil</th>
+                <th>Acción</th>
             </tr>
         </thead>
         <tbody>
@@ -38,16 +39,24 @@
                         <td>
                             <a href="{{ path('ver_perfil', { id: u.id }) }}">Ver Perfil</a>
                         </td>
+                        <td>
+                            {# Verificar si ya existe una solicitud de amistad #}
+                            {% if not (usuario.estaAmistadEnviada(u) or usuario.estaAmistadRecibida(u)) %}
+                                <form action="{{ path('enviar_solicitud', { id: u.id }) }}" method="POST">
+                                    <button type="submit" class="btn">Enviar Solicitud</button>
+                                </form>
+                            {% else %}
+                                <span>Solicitud enviada</span>
+                            {% endif %}
+                        </td>
                     </tr>
                 {% endif %}
             {% else %}
                 <tr>
-                    <td colspan="2">No hay usuarios registrados.</td>
+                    <td colspan="3">No hay usuarios registrados.</td>
                 </tr>
             {% endfor %}
         </tbody>
     </table>
 {% endblock %}
-
-
 
