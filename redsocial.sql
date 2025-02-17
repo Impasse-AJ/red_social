@@ -17,6 +17,18 @@ CREATE TABLE `usuarios` (
   `activo` BOOLEAN DEFAULT FALSE, -- Nueva columna para activar o desactivar la cuenta
   PRIMARY KEY (`id`)
 );
+CREATE TABLE `amistad` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `solicitante_id` int(11) NOT NULL,
+  `receptor_id` int(11) NOT NULL,
+  `estado` varchar(50) NOT NULL,  -- Ejemplo de valores: 'pendiente', 'aceptada', 'rechazada'
+  `fecha_solicitud` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP(),
+  PRIMARY KEY (`id`),
+  KEY `solicitante_id` (`solicitante_id`),
+  KEY `receptor_id` (`receptor_id`),
+  CONSTRAINT `amistad_solicitante_fk` FOREIGN KEY (`solicitante_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `amistad_receptor_fk` FOREIGN KEY (`receptor_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Estructura de tabla para la tabla `publicaciones`
 CREATE TABLE `publicaciones` (
