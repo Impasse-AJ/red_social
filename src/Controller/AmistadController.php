@@ -74,26 +74,36 @@ class AmistadController extends AbstractController
     {
         $usuario = $this->getUser();
         $amigo = $entityManager->getRepository(Usuario::class)->find($id);
-
+    
         if (!$amigo) {
             return $this->redirectToRoute('ctrl_home');
         }
-
+    
+        // Buscar la amistad donde el usuario es el solicitante y el amigo es el receptor
         $amistad = $entityManager->getRepository(Amistad::class)->findOneBy([
-            'estado' => 'aceptada',
-            '$or' => [
-                ['solicitante' => $usuario, 'receptor' => $amigo],
-                ['solicitante' => $amigo, 'receptor' => $usuario]
-            ]
+            'solicitante' => $usuario,
+            'receptor' => $amigo,
+            'estado' => 'aceptada'
         ]);
-
+    
+        // Si no se encontró, buscar donde el usuario es el receptor y el amigo es el solicitante
+        if (!$amistad) {
+            $amistad = $entityManager->getRepository(Amistad::class)->findOneBy([
+                'solicitante' => $amigo,
+                'receptor' => $usuario,
+                'estado' => 'aceptada'
+            ]);
+        }
+    
+        // Si existe la amistad, eliminarla
         if ($amistad) {
             $entityManager->remove($amistad);
             $entityManager->flush();
         }
-
+    
         return $this->redirectToRoute('ver_perfil', ['id' => $id]);
     }
+    
 
     #[Route('/amistades/solicitudes', name: 'ver_solicitudes')]
     #[IsGranted('IS_AUTHENTICATED_FULLY')] // Solo usuarios autenticados pueden ver solicitudes
