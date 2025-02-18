@@ -50,8 +50,8 @@ CREATE TABLE amistades (
     FOREIGN KEY (id_receptor) REFERENCES usuarios(id) ON DELETE CASCADE
 );
 
--- Insertar usuarios de prueba con contraseña hasheada (1234)
-INSERT INTO `usuarios` (`email`, `nombre_usuario`, `contrasena`) VALUES
-('abraham@social.com', 'abraham123', '$2y$10$GAg870uvPLRNCbm8LFez4eg0pJz7Z8.ABVYoLRqIk00tWR8Ef5T/O'), 
-('alejo@social.com', 'alejo_92', '$2y$10$f/0Xle4yDhedSaSR8vPrYOlgBNkhi2PrsQe83Y3.nVa6tb6ClQcte'), 
-('alex@social.com', 'alex_xd', '$2y$10$XAj1J5.1OSZCad9eGg6/P.Ef608RmhIv.adMnfu5JS98Wyd0yNehW');
+-- Insertar usuarios de prueba con contraseña hasheada (1234) y cuentas activadas
+INSERT INTO `usuarios` (`email`, `nombre_usuario`, `contrasena`, `activo`) VALUES
+('abraham@social.com', 'abraham123', '$2y$10$GAg870uvPLRNCbm8LFez4eg0pJz7Z8.ABVYoLRqIk00tWR8Ef5T/O', TRUE), 
+('alejo@social.com', 'alejo_92', '$2y$10$f/0Xle4yDhedSaSR8vPrYOlgBNkhi2PrsQe83Y3.nVa6tb6ClQcte', TRUE), 
+('alex@social.com', 'alex_xd', '$2y$10$XAj1J5.1OSZCad9eGg6/P.Ef608RmhIv.adMnfu5JS98Wyd0yNehW', TRUE);
