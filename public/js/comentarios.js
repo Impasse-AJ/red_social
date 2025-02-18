@@ -35,25 +35,32 @@ document.addEventListener("DOMContentLoaded", function () {
         })
         .then(response => response.json())
         .then(data => {
-            console.log("Respuesta del servidor:", data);
-
             if (data.error) {
                 alert("Error al agregar comentario: " + data.error);
                 return;
             }
 
             if (!data.id) {
-                alert("Error crítico: No se recibió un ID válido para el comentario. Recarga la página e intenta nuevamente.");
+                alert("Error crítico: No se recibió un ID válido para el comentario.");
                 return;
             }
 
-            // ✅ Crear nuevo comentario dinámicamente con ID real
+            // ✅ Crear nuevo comentario dinámicamente con estilos
             const nuevoComentario = document.createElement("li");
             nuevoComentario.id = `comentario-${data.id}`;
             nuevoComentario.classList.add("draggable-comentario");
             nuevoComentario.setAttribute("draggable", true);
             nuevoComentario.innerHTML = `<strong>${data.usuario}</strong>: ${data.contenido} 
                 <small>(${data.fecha})</small>`;
+
+            // 🎨 Estilos para los comentarios
+            nuevoComentario.style.backgroundColor = "#fff";
+            nuevoComentario.style.padding = "10px";
+            nuevoComentario.style.marginBottom = "10px";
+            nuevoComentario.style.borderRadius = "5px";
+            nuevoComentario.style.boxShadow = "0 2px 5px rgba(0, 0, 0, 0.1)";
+            nuevoComentario.style.textAlign = "left";
+            nuevoComentario.style.cursor = "grab";
 
             comentariosLista.appendChild(nuevoComentario);
 
@@ -73,30 +80,40 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     if (papelera) {
+        // 🎨 Estilos de la papelera
+        papelera.style.backgroundColor = "#f8d7da";
+        papelera.style.color = "#721c24";
+        papelera.style.padding = "10px";
+        papelera.style.border = "2px dashed #721c24";
+        papelera.style.textAlign = "center";
+        papelera.style.marginTop = "15px";
+        papelera.style.fontWeight = "bold";
+        papelera.style.transition = "background 0.3s ease";
+        
         papelera.addEventListener("dragover", function (event) {
             event.preventDefault();
-            papelera.classList.add("dragover");
+            papelera.style.backgroundColor = "#dc3545";
+            papelera.style.color = "#fff";
         });
 
         papelera.addEventListener("dragleave", function () {
-            papelera.classList.remove("dragover");
+            papelera.style.backgroundColor = "#f8d7da";
+            papelera.style.color = "#721c24";
         });
 
         papelera.addEventListener("drop", function (event) {
             event.preventDefault();
-            papelera.classList.remove("dragover");
+            papelera.style.backgroundColor = "#f8d7da";
+            papelera.style.color = "#721c24";
 
             const comentarioIdCompleto = event.dataTransfer.getData("text");
-            console.log("Elemento arrastrado:", comentarioIdCompleto);
 
-            if (!comentarioIdCompleto || !comentarioIdCompleto.startsWith("comentario-")) {
+            if (!comentarioIdCompleto.startsWith("comentario-")) {
                 alert("Error: El elemento arrastrado no es un comentario válido.");
                 return;
             }
 
             const idNumerico = comentarioIdCompleto.split("-")[1];
-            console.log("ID numérico extraído:", idNumerico);
-
             const comentarioElemento = document.getElementById(comentarioIdCompleto);
             if (comentarioElemento) {
                 eliminarComentario(idNumerico, comentarioElemento);
@@ -113,32 +130,19 @@ document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll(".draggable-comentario").forEach(addDragFunctionality);
 
     function eliminarComentario(comentarioId, elemento) {
-        console.log(`Intentando eliminar comentario con ID: ${comentarioId}`);
-
         fetch(`/EliminarComentario/${comentarioId}`, {
             method: "DELETE",
             headers: { "X-Requested-With": "XMLHttpRequest" }
         })
-        .then(response => {
-            console.log("Estado de la respuesta:", response.status);
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
+        .then(response => response.json())
         .then(data => {
-            console.log("Respuesta del servidor:", data);
-
             if (data.success) {
                 elemento.remove();
-          
             } else {
                 alert("Error al eliminar el comentario: " + data.error);
             }
         })
         .catch(error => {
-            console.error("Error en la petición AJAX:", error);
             alert("Hubo un error eliminando el comentario.");
         });
     }
