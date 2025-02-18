@@ -1,0 +1,11 @@
+Ampliaciones
+-Amistad (o seguir a un usuario)
+-Registro
+-Recuperar contraseña
+-Contraseña cifrada
+-Foto de perfil
+
+Credenciales
+abraham@social.com', 1234
+'alejo@social.com', 1234
+'alex@social.com', 1234
