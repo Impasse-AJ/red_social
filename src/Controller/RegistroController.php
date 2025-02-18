@@ -16,75 +16,72 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class RegistroController extends AbstractController
 {
-    #[Route('/registro', name: 'registro', methods: ['GET', 'POST'])]
-public function register(
-    Request $request, 
-    EntityManagerInterface $em, 
-    MailerInterface $mailer, 
-    UserPasswordHasherInterface $passwordHasher
-): JsonResponse|Response {
-    // Verificar si la solicitud es POST (AJAX)
-    if ($request->isMethod('POST')) {
-        $data = json_decode($request->getContent(), true);
+    #[Route('/registro', name: 'registro')]
+    public function register(
+        Request $request, 
+        EntityManagerInterface $em, 
+        MailerInterface $mailer, 
+        UserPasswordHasherInterface $passwordHasher
+    ): Response {
+        $success = null;
+        $error = null;
 
-        $email = $data['email'] ?? '';
-        $nombreUsuario = $data['nombre_usuario'] ?? '';
-        $contrasena = $data['contrasena'] ?? '';
+        if ($request->isMethod('POST')) {
+            // Obtener datos del formulario
+            $email = $request->request->get('email');
+            $nombreUsuario = $request->request->get('nombre_usuario');
+            $contrasena = $request->request->get('contrasena');
+            
+            // Verificar si el nombre de usuario o email ya existen
+            $emailExistente = $em->getRepository(Usuario::class)->findOneBy(['email' => $email]);
+            $usuarioExistente = $em->getRepository(Usuario::class)->findOneBy(['nombreUsuario' => $nombreUsuario]);
 
-        // Verificar si el usuario o email ya existen
-        $emailExistente = $em->getRepository(Usuario::class)->findOneBy(['email' => $email]);
-        $usuarioExistente = $em->getRepository(Usuario::class)->findOneBy(['nombreUsuario' => $nombreUsuario]);
+            if ($usuarioExistente) {
+                $error = 'El nombre de usuario ya está registrado.';
+            } elseif ($emailExistente) {
+                $error = 'El email ya está en uso.';
+            } else {
+                // Crear nuevo usuario
+                $usuario = new Usuario();
+                $usuario->setEmail($email);
+                $usuario->setNombreUsuario($nombreUsuario);
+                $usuario->setContrasena($passwordHasher->hashPassword($usuario, $contrasena)); 
+                $usuario->setActivo(false);
 
-        if ($usuarioExistente) {
-            return new JsonResponse(['error' => 'El nombre de usuario ya está registrado.'], Response::HTTP_BAD_REQUEST);
+                try {
+                    $em->persist($usuario);
+                    $em->flush();
+                } catch (\Exception $e) {
+                    return new Response('Error al guardar en la base de datos: ' . $e->getMessage());
+                }
+
+                // Generar el enlace de activación
+                $urlActivacion = $this->generateUrl(
+                    'activar_cuenta', 
+                    ['id' => $usuario->getId()], 
+                    UrlGeneratorInterface::ABSOLUTE_URL
+                );
+
+                // Intentar enviar el correo
+                try {
+                    $emailMessage = (new Email())
+                        ->from('noreply@redsocial.com')
+                        ->to($email)
+                        ->subject('Activa tu cuenta')
+                        ->html('<p>Hola, activa tu cuenta haciendo clic en el siguiente enlace: </p>
+                               <a href="' . $urlActivacion . '">Activar Cuenta</a>');
+                
+                    $mailer->send($emailMessage);
+                    
+                    $success = 'Se ha enviado un correo de confirmación. Revisa tu correo y activa tu cuenta.';
+                } catch (\Exception $e) {
+                    return new Response('Error al enviar el correo: ' . $e->getMessage());
+                }
+            }
         }
-        
-        if ($emailExistente) {
-            return new JsonResponse(['error' => 'El email ya está en uso.'], Response::HTTP_BAD_REQUEST);
-        }
 
-        // Crear nuevo usuario
-        $usuario = new Usuario();
-        $usuario->setEmail($email);
-        $usuario->setNombreUsuario($nombreUsuario);
-        $usuario->setContrasena($passwordHasher->hashPassword($usuario, $contrasena)); 
-        $usuario->setActivo(false);
-
-        try {
-            $em->persist($usuario);
-            $em->flush();
-        } catch (\Exception $e) {
-            // Mostrar el mensaje de error
-            return new JsonResponse(['error' => 'Error al guardar en la base de datos: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-
-        // Generar enlace de activación
-        $urlActivacion = $this->generateUrl(
-            'activar_cuenta', 
-            ['id' => $usuario->getId()], 
-            UrlGeneratorInterface::ABSOLUTE_URL
-        );
-
-        // Enviar correo de activación
-        try {
-            $emailMessage = (new Email())
-                ->from('noreply@redsocial.com')
-                ->to($email)
-                ->subject('Activa tu cuenta')
-                ->html("<p>Hola, activa tu cuenta haciendo clic en el siguiente enlace: </p>
-                        <a href='$urlActivacion'>Activar Cuenta</a>");
-
-            $mailer->send($emailMessage);
-
-            return new JsonResponse(['success' => 'Se ha enviado un correo de confirmación. Revisa tu correo y activa tu cuenta.']);
-        } catch (\Exception $e) {
-            return new JsonResponse(['error' => 'Error al enviar el correo.'], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
+        return $this->render('registro.html.twig', ['success' => $success, 'error' => $error]);
     }
-
-    // Método GET para mostrar el formulario
-    return $this->render('registro.html.twig');
-}
 
     #[Route('/activar/{id}', name: 'activar_cuenta')]
     public function activarCuenta(int $id, EntityManagerInterface $em): Response

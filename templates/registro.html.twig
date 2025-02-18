@@ -1,41 +1,44 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro</title>
-    <link rel="stylesheet" href="{{ asset('css/registro.css') }}">
-</head>
-<body>
-    <div class="registro-container">
-        <h1>Registro</h1>
+{% extends 'base.html.twig' %}
 
-        <div id="mensaje"></div>
+{% block title %}Registro{% endblock %}
 
-        <form id="registroForm">
-            <div class="form-group">
-                <label for="email">Correo Electrónico:</label>
-                <input type="text" id="email" name="email" required>
-                
-                <label for="nombre_usuario">Nombre de Usuario:</label>
-                <input type="text" id="nombre_usuario" name="nombre_usuario" required>
-            </div>
+{% block body %}
+<div class="registro-container">
+  <link rel="stylesheet" href="{{ asset('css/registro.css') }}">
+    <h1>Registro</h1>
 
-            <div class="form-group">
-                <label for="contrasena">Contraseña:</label>
-                <input type="password" id="contrasena" name="contrasena" required>
-            </div>
+    {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
 
-            <button type="submit">Registrarse</button>
-        </form>
+    {% if success %}
+        <div class="alert alert-success">{{ success }}</div>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                document.getElementById('registroForm').style.display = 'none';
+            });
+        </script>
+    {% endif %}
+
+    <form action="{{ path('registro') }}" method="POST" id="registroForm">
+        <div class="form-group">
+            <label for="email">Correo Electrónico:</label>
+            <input type="text" id="email" name="email" required>
+
+            <label for="nombre_usuario">Nombre de Usuario:</label>
+            <input type="text" id="nombre_usuario" name="nombre_usuario" required>
+        </div>
+
+        <div class="form-group">
+            <label for="contrasena">Contraseña:</label>
+            <input type="password" id="contrasena" name="contrasena" required>
+        </div>
+
+        <button type="submit">Registrarse</button>
+    </form>
+    <!-- Botón para volver al login -->
+    <div class="volver-login">
+        <a href="{{ path('ctrl_login') }}" class="btn btn-primary">Volver al Login</a>
     </div>
-
-    
-</body>
-</html>
-
-
-
-
-
-
+</div>
+{% endblock %}
