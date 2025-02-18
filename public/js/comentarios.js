@@ -102,14 +102,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function eliminarComentario(comentarioId, elemento) {
         console.log(`Intentando eliminar comentario con ID: ${comentarioId}`);
-
+    
         fetch(`/EliminarComentario/${comentarioId}`, {
             method: "DELETE",
             headers: { "X-Requested-With": "XMLHttpRequest" }
         })
         .then(response => {
             console.log("Estado de la respuesta:", response.status);
-
+    
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -117,10 +117,10 @@ document.addEventListener("DOMContentLoaded", function () {
         })
         .then(data => {
             console.log("Respuesta del servidor:", data);
-
+    
             if (data.success) {
                 elemento.remove();
-          
+                location.reload();  // Recarga la página después de eliminar el comentario
             } else {
                 alert("Error al eliminar el comentario: " + data.error);
             }
@@ -130,6 +130,7 @@ document.addEventListener("DOMContentLoaded", function () {
             alert("Hubo un error eliminando el comentario.");
         });
     }
+    
 });
 
 
