@@ -61,6 +61,7 @@ class AmistadController extends AbstractController
             $solicitud->setEstado('aceptada');
         } elseif ($accion === 'rechazar') {
             $solicitud->setEstado('rechazada');
+            $entityManager->remove($solicitud);
         }
 
         $entityManager->flush();
