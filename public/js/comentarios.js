@@ -120,7 +120,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             if (data.success) {
                 elemento.remove();
-                alert("Comentario eliminado correctamente.");
+          
             } else {
                 alert("Error al eliminar el comentario: " + data.error);
             }

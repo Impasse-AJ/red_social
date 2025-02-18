@@ -51,21 +51,23 @@ public function comentarPublicacion(int $id, Request $request, EntityManagerInte
     }
 
     // Crear y guardar el comentario
-    $comentario = new Comentario();
-    $comentario->setPublicacion($publicacion);
-    $comentario->setUsuario($this->getUser());
-    $comentario->setContenido($contenido);
-    $comentario->setFechaCreacion(new \DateTime());
+$comentario = new Comentario();
+$comentario->setPublicacion($publicacion);
+$comentario->setUsuario($this->getUser());
+$comentario->setContenido($contenido);
+$comentario->setFechaCreacion(new \DateTime());
 
-    $entityManager->persist($comentario);
-    $entityManager->flush();
+$entityManager->persist($comentario);
+$entityManager->flush();
 
-    // Devolver respuesta JSON para que JavaScript pueda procesarla
-    return $this->json([
-        'usuario' => $this->getUser()->getNombreUsuario(),
-        'contenido' => $contenido,
-        'fecha' => (new \DateTime())->format('d/m/Y H:i')
-    ]);
+
+return $this->json([
+    'id' => $comentario->getId(), 
+    'usuario' => $this->getUser()->getNombreUsuario(),
+    'contenido' => $contenido,
+    'fecha' => (new \DateTime())->format('d/m/Y H:i')
+]);
+
 }
 
 
