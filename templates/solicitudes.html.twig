@@ -14,11 +14,13 @@
                     <strong>{{ solicitud.solicitante.nombreUsuario }}</strong> te ha enviado una solicitud de amistad.
                     
                     <form method="POST" action="{{ path('responder_solicitud', { id: solicitud.id }) }}" style="display:inline;">
+                        <input type="hidden" name="_token" value="{{ csrf_token('responder_solicitud') }}">
                         <input type="hidden" name="accion" value="aceptar">
                         <button type="submit" class="btn-aceptar">Aceptar ✅</button>
                     </form>
 
                     <form method="POST" action="{{ path('responder_solicitud', { id: solicitud.id }) }}" style="display:inline;">
+                        <input type="hidden" name="_token" value="{{ csrf_token('responder_solicitud') }}">
                         <input type="hidden" name="accion" value="rechazar">
                         <button type="submit" class="btn-rechazar">Rechazar ❌</button>
                     </form>

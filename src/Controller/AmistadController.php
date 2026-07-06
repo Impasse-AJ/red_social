@@ -15,8 +15,12 @@ class AmistadController extends AbstractController
 {
     #[Route('/amistad/enviar/{id}', name: 'enviar_solicitud', methods: ['POST'])]
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
-    public function enviarSolicitud(int $id, EntityManagerInterface $entityManager): Response
+    public function enviarSolicitud(int $id, Request $request, EntityManagerInterface $entityManager): Response
     {
+        if (!$this->isCsrfTokenValid('amistad', $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Token CSRF inválido.');
+        }
+
         $solicitante = $this->getUser();
         $receptor = $entityManager->getRepository(Usuario::class)->find($id);
 
@@ -48,6 +52,10 @@ class AmistadController extends AbstractController
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
     public function responderSolicitud(int $id, Request $request, EntityManagerInterface $entityManager): Response
     {
+        if (!$this->isCsrfTokenValid('responder_solicitud', $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Token CSRF inválido.');
+        }
+
         $usuario = $this->getUser();
         $solicitud = $entityManager->getRepository(Amistad::class)->find($id);
 
@@ -71,8 +79,12 @@ class AmistadController extends AbstractController
 
     #[Route('/amistad/eliminar/{id}', name: 'eliminar_amistad', methods: ['POST'])]
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
-    public function eliminarAmistad(int $id, EntityManagerInterface $entityManager): Response
+    public function eliminarAmistad(int $id, Request $request, EntityManagerInterface $entityManager): Response
     {
+        if (!$this->isCsrfTokenValid('amistad', $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Token CSRF inválido.');
+        }
+
         $usuario = $this->getUser();
         $amigo = $entityManager->getRepository(Usuario::class)->find($id);
     

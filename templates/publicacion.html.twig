@@ -32,12 +32,13 @@
 
         <h3>Agregar comentario</h3>
         <form id="comentario-form" method="POST" action="{{ path('comentar_publicacion', { id: publicacion.id }) }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('comentar') }}">
             <textarea id="contenido" name="contenido" required placeholder="Escribe un comentario..."></textarea><br>
             <button type="submit">Comentar</button>
         </form>
 
         <!-- 🗑️ Papelera para eliminar comentarios -->
-        <div id="papelera" class="papelera">
+        <div id="papelera" class="papelera" data-csrf="{{ csrf_token('eliminar_comentario') }}">
             🗑️ Arrastra aquí un comentario para eliminarlo
         </div>
 

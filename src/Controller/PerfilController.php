@@ -11,6 +11,7 @@ use App\Entity\Publicacion;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 use App\Entity\Amistad;
 
 class PerfilController extends AbstractController
@@ -94,9 +95,13 @@ class PerfilController extends AbstractController
             throw $this->createAccessDeniedException("No puedes publicar en este perfil.");
         }
 
-        $contenido = $request->request->get('contenido');
+        if (!$this->isCsrfTokenValid('publicar', $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Token CSRF inválido.');
+        }
 
-        if ($contenido) {
+        $contenido = trim((string) $request->request->get('contenido'));
+
+        if ($contenido !== '' && mb_strlen($contenido) <= 255) {
             $publicacion = new Publicacion();
             $publicacion->setUsuario($usuario);
             $publicacion->setContenido($contenido);
@@ -110,7 +115,7 @@ class PerfilController extends AbstractController
     }
     #[Route('/perfil/{id}/editar', name: 'editar_perfil')]
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
-    public function editarPerfil(int $id, Request $request, EntityManagerInterface $entityManager): Response
+    public function editarPerfil(int $id, Request $request, EntityManagerInterface $entityManager, ValidatorInterface $validator): Response
     {
         $usuario = $entityManager->getRepository(Usuario::class)->find($id);
 
@@ -118,19 +123,40 @@ class PerfilController extends AbstractController
             throw $this->createAccessDeniedException("No puedes editar este perfil.");
         }
 
+        $error = null;
+
         if ($request->isMethod('POST')) {
-            $nuevoNombre = $request->request->get('nombre_usuario');
+            if (!$this->isCsrfTokenValid('editar_perfil', $request->request->get('_token'))) {
+                throw $this->createAccessDeniedException('Token CSRF inválido.');
+            }
 
-            if ($nuevoNombre) {
+            $nuevoNombre = trim((string) $request->request->get('nombre_usuario'));
+
+            // Comprobar que el nombre no esté ya cogido por otro usuario
+            $existente = $entityManager->getRepository(Usuario::class)->findOneBy(['nombreUsuario' => $nuevoNombre]);
+
+            if ($existente && $existente->getId() !== $usuario->getId()) {
+                $error = 'Ese nombre de usuario ya está en uso.';
+            } else {
+                $nombreAnterior = $usuario->getNombreUsuario();
                 $usuario->setNombreUsuario($nuevoNombre);
-                $entityManager->flush();
 
-                return $this->redirectToRoute('ver_perfil', ['id' => $id]);
+                $errores = $validator->validate($usuario);
+
+                if (count($errores) > 0) {
+                    $usuario->setNombreUsuario($nombreAnterior);
+                    $error = $errores[0]->getMessage();
+                } else {
+                    $entityManager->flush();
+
+                    return $this->redirectToRoute('ver_perfil', ['id' => $id]);
+                }
             }
         }
 
         return $this->render('editar_perfil.html.twig', [
             'usuario' => $usuario,
+            'error' => $error,
         ]);
     }
     #[Route('/perfil/{id}/subir-foto', name: 'subir_foto_perfil')]
@@ -143,28 +169,49 @@ class PerfilController extends AbstractController
             throw $this->createAccessDeniedException("No puedes modificar esta foto de perfil.");
         }
 
-        if ($request->isMethod('POST') && $request->files->get('foto')) {
+        $error = null;
+
+        if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('subir_foto', $request->request->get('_token'))) {
+                throw $this->createAccessDeniedException('Token CSRF inválido.');
+            }
+
             $foto = $request->files->get('foto');
-            $nombreArchivo = uniqid() . '.' . $foto->guessExtension();
 
-            // Mover la imagen a la carpeta "uploads"
-            $foto->move($this->getParameter('foto_perfil_directorio'), $nombreArchivo);
+            if (!$foto || !$foto->isValid()) {
+                $error = 'No se ha recibido ninguna imagen válida.';
+            } elseif ($foto->getSize() > 2 * 1024 * 1024) {
+                $error = 'La imagen no puede superar los 2 MB.';
+            } elseif (!in_array($foto->getMimeType(), ['image/jpeg', 'image/png', 'image/webp', 'image/gif'], true)) {
+                // getMimeType() inspecciona el contenido real del archivo, no la extensión
+                $error = 'Formato no permitido. Usa JPG, PNG, WEBP o GIF.';
+            } else {
+                $nombreArchivo = uniqid() . '.' . $foto->guessExtension();
+                $foto->move($this->getParameter('foto_perfil_directorio'), $nombreArchivo);
 
-            // Guardar en la BD la nueva ruta de la imagen
-            $usuario->setFotoPerfil($nombreArchivo);
-            $entityManager->flush();
+                // Borrar la foto anterior (salvo la imagen por defecto)
+                $this->borrarFotoAnterior($usuario);
 
-            return $this->redirectToRoute('ver_perfil', ['id' => $id]);
+                $usuario->setFotoPerfil($nombreArchivo);
+                $entityManager->flush();
+
+                return $this->redirectToRoute('ver_perfil', ['id' => $id]);
+            }
         }
 
         return $this->render('subir_foto.html.twig', [
             'usuario' => $usuario,
+            'error' => $error,
         ]);
     }
     #[Route('/perfil/{id}/quitar-foto', name: 'quitar_foto_perfil', methods: ['POST'])]
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
-    public function quitarFotoPerfil(int $id, EntityManagerInterface $entityManager): Response
+    public function quitarFotoPerfil(int $id, Request $request, EntityManagerInterface $entityManager): Response
     {
+        if (!$this->isCsrfTokenValid('quitar_foto', $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Token CSRF inválido.');
+        }
+
         $usuario = $entityManager->getRepository(Usuario::class)->find($id);
 
         if (!$usuario || $this->getUser()->getId() !== $usuario->getId()) {
@@ -172,18 +219,29 @@ class PerfilController extends AbstractController
         }
 
         if ($usuario->getFotoPerfil()) {
-            $filesystem = new Filesystem();
-            $rutaFoto = $this->getParameter('foto_perfil_directorio') . '/' . $usuario->getFotoPerfil();
-            
-            if ($filesystem->exists($rutaFoto)) {
-                $filesystem->remove($rutaFoto);
-            }
-
+            $this->borrarFotoAnterior($usuario);
             $usuario->setFotoPerfil(null);
             $entityManager->flush();
         }
 
         return $this->redirectToRoute('ver_perfil', ['id' => $id]);
+    }
+
+    private function borrarFotoAnterior(Usuario $usuario): void
+    {
+        $fotoActual = $usuario->getFotoPerfil();
+
+        // La imagen por defecto es compartida: no se borra del disco
+        if (!$fotoActual || $fotoActual === 'default-profile-picture.jpg') {
+            return;
+        }
+
+        $filesystem = new Filesystem();
+        $rutaFoto = $this->getParameter('foto_perfil_directorio') . '/' . $fotoActual;
+
+        if ($filesystem->exists($rutaFoto)) {
+            $filesystem->remove($rutaFoto);
+        }
     }
 }
 

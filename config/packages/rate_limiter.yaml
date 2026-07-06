@@ -1,0 +1,7 @@
+framework:
+    rate_limiter:
+        # Límite de solicitudes de recuperación de contraseña por IP
+        recuperacion_password:
+            policy: 'fixed_window'
+            limit: 3
+            interval: '15 minutes'

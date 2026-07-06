@@ -1,5 +1,6 @@
 parameters:
     foto_perfil_directorio: '%kernel.project_dir%/public/uploads'
+    app.mail_from: '%env(MAILER_FROM)%'
 services:
     # Default configuration for services
     _defaults:

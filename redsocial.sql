@@ -13,7 +13,9 @@ CREATE TABLE `usuarios` (
   `contrasena` VARCHAR(255) NOT NULL,
   `foto_perfil` VARCHAR(255) NOT NULL,
   `fecha_creacion` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(),
-  `codigo_recuperacion` VARCHAR(255) NULL, -- Nueva columna para almacenar el código de recuperación
+  `codigo_recuperacion` VARCHAR(255) NULL, -- Hash del código de recuperación de contraseña
+  `codigo_recuperacion_expira` DATETIME NULL, -- Caducidad del código de recuperación
+  `token_activacion` VARCHAR(64) NULL, -- Token de activación de cuenta (de un solo uso)
   `activo` BOOLEAN DEFAULT FALSE, -- Nueva columna para activar o desactivar la cuenta
   PRIMARY KEY (`id`)
 );

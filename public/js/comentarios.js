@@ -132,7 +132,10 @@ document.addEventListener("DOMContentLoaded", function () {
     function eliminarComentario(comentarioId, elemento) {
         fetch(`/EliminarComentario/${comentarioId}`, {
             method: "DELETE",
-            headers: { "X-Requested-With": "XMLHttpRequest" }
+            headers: {
+                "X-Requested-With": "XMLHttpRequest",
+                "X-CSRF-Token": papelera ? papelera.dataset.csrf : ""
+            }
         })
         .then(response => response.json())
         .then(data => {

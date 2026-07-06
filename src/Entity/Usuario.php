@@ -4,6 +4,7 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'usuarios')]
@@ -15,9 +16,15 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
     private $id;
 
     #[ORM\Column(name: 'email', type: 'string', unique: true)]
+    #[Assert\NotBlank(message: 'El correo electrónico es obligatorio.')]
+    #[Assert\Email(message: 'El correo electrónico no es válido.')]
+    #[Assert\Length(max: 180, maxMessage: 'El correo electrónico es demasiado largo.')]
     private string $email;
 
     #[ORM\Column(name: 'nombre_usuario', type: 'string', unique: true)]
+    #[Assert\NotBlank(message: 'El nombre de usuario es obligatorio.')]
+    #[Assert\Length(min: 3, max: 50, minMessage: 'El nombre de usuario debe tener al menos {{ limit }} caracteres.', maxMessage: 'El nombre de usuario no puede superar {{ limit }} caracteres.')]
+    #[Assert\Regex(pattern: '/^[a-zA-Z0-9_.-]+$/', message: 'El nombre de usuario solo puede contener letras, números, puntos, guiones y guiones bajos.')]
     private string $nombreUsuario;
 
     #[ORM\Column(name: 'contrasena', type: 'string')]
@@ -30,6 +37,12 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(name: 'codigo_recuperacion', type: 'string', nullable: true)]
     private ?string $codigoRecuperacion = null;
+
+    #[ORM\Column(name: 'codigo_recuperacion_expira', type: 'datetime', nullable: true)]
+    private ?\DateTime $codigoRecuperacionExpira = null;
+
+    #[ORM\Column(name: 'token_activacion', type: 'string', length: 64, nullable: true)]
+    private ?string $tokenActivacion = null;
 
     #[ORM\Column(name: 'activo', type: 'boolean')]
     private bool $activo = false;
@@ -101,6 +114,28 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
     public function setCodigoRecuperacion(?string $codigoRecuperacion): self
     {
         $this->codigoRecuperacion = $codigoRecuperacion;
+        return $this;
+    }
+
+    public function getCodigoRecuperacionExpira(): ?\DateTime
+    {
+        return $this->codigoRecuperacionExpira;
+    }
+
+    public function setCodigoRecuperacionExpira(?\DateTime $codigoRecuperacionExpira): self
+    {
+        $this->codigoRecuperacionExpira = $codigoRecuperacionExpira;
+        return $this;
+    }
+
+    public function getTokenActivacion(): ?string
+    {
+        return $this->tokenActivacion;
+    }
+
+    public function setTokenActivacion(?string $tokenActivacion): self
+    {
+        $this->tokenActivacion = $tokenActivacion;
         return $this;
     }
 

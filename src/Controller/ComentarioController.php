@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Doctrine\ORM\EntityManagerInterface;
@@ -14,8 +15,13 @@ class ComentarioController extends AbstractController
 {
     #[Route('/EliminarComentario/{id}', name: 'EliminarComentario', methods: ['DELETE'])]
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
-    public function eliminarComentario(int $id, EntityManagerInterface $entityManager): JsonResponse
+    public function eliminarComentario(int $id, Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
+        // El token CSRF viaja en la cabecera porque la petición se hace con fetch()
+        if (!$this->isCsrfTokenValid('eliminar_comentario', $request->headers->get('X-CSRF-Token'))) {
+            return new JsonResponse(['success' => false, 'error' => 'Token CSRF inválido.'], Response::HTTP_FORBIDDEN);
+        }
+
         $comentario = $entityManager->getRepository(Comentario::class)->find($id);
 
         if (!$comentario) {

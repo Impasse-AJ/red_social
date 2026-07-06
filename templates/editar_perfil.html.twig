@@ -8,7 +8,12 @@
     <div class="container">
         <h1>Editar Perfil</h1>
 
+        {% if error is defined and error %}
+            <p class="error">{{ error }}</p>
+        {% endif %}
+
         <form method="POST">
+            <input type="hidden" name="_token" value="{{ csrf_token('editar_perfil') }}">
             <label for="nombre_usuario">Nombre de Usuario:</label>
             <input type="text" id="nombre_usuario" name="nombre_usuario" value="{{ usuario.nombreUsuario }}" required>
             

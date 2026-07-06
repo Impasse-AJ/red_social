@@ -10,7 +10,11 @@
     <div class="container">
         <h1>Subir Foto de Perfil</h1>
 <link rel="stylesheet" href="{{ asset('css/subir_foto.css') }}">
+        {% if error is defined and error %}
+            <p class="error">{{ error }}</p>
+        {% endif %}
         <form method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="_token" value="{{ csrf_token('subir_foto') }}">
             <input type="file" name="foto" accept="image/*" required>
             <button type="submit">Subir</button>
         </form>

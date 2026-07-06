@@ -9,10 +9,15 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 use App\Entity\Usuario;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class RecuperarContrasenaController extends AbstractController
 {
+    // Mensaje neutro: no revela si el email existe o no (evita enumeración de usuarios)
+    private const MENSAJE_NEUTRO = 'Si existe una cuenta con ese correo, recibirás un enlace de recuperación en unos minutos.';
+
     #[Route('/recuperar-password', name: 'recuperar_password')]
     public function mostrarFormulario(Request $request)
     {
@@ -21,66 +26,67 @@ class RecuperarContrasenaController extends AbstractController
             'error' => null
         ]);
     }
-    
+
     #[Route('/procesar-recuperacion', name: 'procesar_recuperacion', methods: ['POST'])]
     public function procesarRecuperacion(
         Request $request,
         EntityManagerInterface $entityManager,
-        MailerInterface $mailer
+        MailerInterface $mailer,
+        RateLimiterFactory $recuperacionPasswordLimiter
     ) {
-        $email = $request->request->get('email');
-    
-        // Buscar usuario en la base de datos
-        $usuario = $entityManager->getRepository(Usuario::class)->findOneBy(['email' => $email]);
-    
-        if (!$usuario) {
+        if (!$this->isCsrfTokenValid('recuperar', $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Token CSRF inválido.');
+        }
+
+        // Límite de solicitudes por IP para evitar abuso
+        $limiter = $recuperacionPasswordLimiter->create($request->getClientIp());
+        if (!$limiter->consume(1)->isAccepted()) {
             return $this->render('recuperar_password.html.twig', [
-                'error' => 'No existe una cuenta asociada a este correo.',
+                'error' => 'Demasiados intentos. Espera unos minutos antes de volver a intentarlo.',
                 'success' => null
             ]);
         }
-    
-        // Generar un código de recuperación aleatorio y hashearlo
-        $codigoRecuperacion = random_int(100000, 999999);
-        $codigoHasheado = md5($codigoRecuperacion);
-        $usuario->setCodigoRecuperacion($codigoHasheado);
-    
-        // Guardar el código en la base de datos
-        $entityManager->persist($usuario);
-        $entityManager->flush();
-    
-        // Generar la URL absoluta para el restablecimiento de contraseña
-        $urlRecuperacion = $this->generateUrl(
-            'restablecer_password',
-            ['codigo' => $codigoRecuperacion], // Se pasará el código en la URL
-            UrlGeneratorInterface::ABSOLUTE_URL // 🔥 Asegura la URL completa
-        );
-    
-        // Enviar correo con el enlace de recuperación
-        $emailMessage = (new Email())
-            ->from('no-reply@empresa.com')
-            ->to($usuario->getEmail())
-            ->subject('Restablecer tu Contraseña')
-            ->html("<p>Haz clic en el siguiente enlace para restablecer tu contraseña:</p>
-            <a href='" . $urlRecuperacion . "'>Restablecer Contraseña</a>");
-    
-        $mailer->send($emailMessage);
-    
+
+        $email = trim((string) $request->request->get('email'));
+        $usuario = $entityManager->getRepository(Usuario::class)->findOneBy(['email' => $email]);
+
+        if ($usuario) {
+            // Token aleatorio de un solo uso; en BD solo se guarda su hash
+            $token = bin2hex(random_bytes(32));
+            $usuario->setCodigoRecuperacion(hash('sha256', $token));
+            $usuario->setCodigoRecuperacionExpira(new \DateTime('+1 hour'));
+            $entityManager->flush();
+
+            $urlRecuperacion = $this->generateUrl(
+                'restablecer_password',
+                ['codigo' => $token],
+                UrlGeneratorInterface::ABSOLUTE_URL
+            );
+
+            $emailMessage = (new Email())
+                ->from($this->getParameter('app.mail_from'))
+                ->to($usuario->getEmail())
+                ->subject('Restablecer tu Contraseña')
+                ->html("<p>Haz clic en el siguiente enlace para restablecer tu contraseña (caduca en 1 hora):</p>
+                <a href='" . $urlRecuperacion . "'>Restablecer Contraseña</a>");
+
+            $mailer->send($emailMessage);
+        }
+
         return $this->render('recuperar_password.html.twig', [
-            'success' => 'Se ha enviado un código de recuperación a tu correo.',
+            'success' => self::MENSAJE_NEUTRO,
             'error' => null
         ]);
     }
-    
+
     #[Route('/restablecer-password/{codigo}', name: 'restablecer_password')]
-    public function mostrarRestablecerFormulario($codigo, EntityManagerInterface $entityManager)
+    public function mostrarRestablecerFormulario(string $codigo, EntityManagerInterface $entityManager)
     {
-        // Buscar al usuario con el código de recuperación
-        $usuario = $entityManager->getRepository(Usuario::class)->findOneBy(['codigoRecuperacion' => md5($codigo)]);
-        // Validar si el código de recuperación es correcto
+        $usuario = $this->buscarUsuarioPorCodigo($codigo, $entityManager);
+
         if (!$usuario) {
             return $this->render('restablecer_password.html.twig', [
-                'error' => 'El código de recuperación es inválido o ya ha sido utilizado.',
+                'error' => 'El enlace de recuperación es inválido, ha caducado o ya ha sido utilizado.',
                 'codigo' => null
             ]);
         }
@@ -92,25 +98,71 @@ class RecuperarContrasenaController extends AbstractController
     }
 
     #[Route('/procesar-restablecimiento', name: 'procesar_restablecimiento', methods: ['POST'])]
-    public function procesarRestablecimiento(Request $request, EntityManagerInterface $entityManager)
-    {
-        $codigo = $request->request->get('codigo');
-        $nuevaContrasena = $request->request->get('password');
-        // Buscar al usuario con el código de recuperación
-        $usuario = $entityManager->getRepository(Usuario::class)->findOneBy(['codigoRecuperacion' => md5($codigo)]);
+    public function procesarRestablecimiento(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        UserPasswordHasherInterface $passwordHasher
+    ) {
+        if (!$this->isCsrfTokenValid('restablecer', $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Token CSRF inválido.');
+        }
+
+        $codigo = (string) $request->request->get('codigo');
+        $nuevaContrasena = (string) $request->request->get('password');
+        $confirmacion = (string) $request->request->get('confirm_password');
+
+        $usuario = $this->buscarUsuarioPorCodigo($codigo, $entityManager);
 
         if (!$usuario) {
             return $this->render('restablecer_password.html.twig', [
-                'error' => 'El código de recuperación es inválido o ya ha sido utilizado.',
+                'error' => 'El enlace de recuperación es inválido, ha caducado o ya ha sido utilizado.',
                 'codigo' => null
             ]);
         }
-        
-        $usuario->setContrasena(password_hash($nuevaContrasena, PASSWORD_BCRYPT));
-        $usuario->setCodigoRecuperacion(null); // Se elimina el código de recuperación
 
-        $entityManager->flush(); // Guardar cambios en la base de datos
+        if ($nuevaContrasena !== $confirmacion) {
+            return $this->render('restablecer_password.html.twig', [
+                'error' => 'Las contraseñas no coinciden.',
+                'codigo' => $codigo
+            ]);
+        }
 
-        return $this->redirectToRoute('ctrl_login'); // Redirigir al login
+        if (mb_strlen($nuevaContrasena) < 8) {
+            return $this->render('restablecer_password.html.twig', [
+                'error' => 'La contraseña debe tener al menos 8 caracteres.',
+                'codigo' => $codigo
+            ]);
+        }
+
+        $usuario->setContrasena($passwordHasher->hashPassword($usuario, $nuevaContrasena));
+        $usuario->setCodigoRecuperacion(null); // El enlace es de un solo uso
+        $usuario->setCodigoRecuperacionExpira(null);
+
+        $entityManager->flush();
+
+        return $this->redirectToRoute('ctrl_login');
+    }
+
+    private function buscarUsuarioPorCodigo(string $codigo, EntityManagerInterface $entityManager): ?Usuario
+    {
+        if ($codigo === '') {
+            return null;
+        }
+
+        $usuario = $entityManager->getRepository(Usuario::class)->findOneBy([
+            'codigoRecuperacion' => hash('sha256', $codigo)
+        ]);
+
+        if (!$usuario) {
+            return null;
+        }
+
+        // Comprobar caducidad del enlace
+        $expira = $usuario->getCodigoRecuperacionExpira();
+        if (!$expira || $expira < new \DateTime()) {
+            return null;
+        }
+
+        return $usuario;
     }
 }

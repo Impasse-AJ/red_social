@@ -21,19 +21,24 @@ security:
             provider: app_user_provider
             user_checker: App\Security\UserChecker
             form_login:
-                login_path: ctrl_login 
+                login_path: ctrl_login
                 check_path: ctrl_login
                 default_target_path: ctrl_home
-                username_parameter: email  # <- Asegurar que aquí usamos 'email' 
+                username_parameter: email  # <- Asegurar que aquí usamos 'email'
+                enable_csrf: true  # Protección CSRF en el formulario de login
             logout:
-                path: ctrl_logout 
+                path: ctrl_logout
                 target: ctrl_login
+            # Límite de intentos de login por usuario e IP (anti fuerza bruta)
+            login_throttling:
+                max_attempts: 5
+                interval: '15 minutes'
 
-    # Control de acceso basado en roles
+    # Control de acceso: todo requiere sesión salvo las rutas públicas
     access_control:
-        - { path: ^/usuarios, roles: ROLE_USER }  # 🚀 Protege la ruta /usuarios para usuarios logueados
-        - { path: ^/admin, roles: ROLE_ADMIN }
-        - { path: ^/profile, roles: ROLE_USER }
+        - { path: ^/(login|registro|activar|recuperar-password|procesar-recuperacion|restablecer-password|procesar-restablecimiento), roles: PUBLIC_ACCESS }
+        - { path: ^/$, roles: PUBLIC_ACCESS }  # Landing page pública (futura)
+        - { path: ^/, roles: ROLE_USER }
 
 
 

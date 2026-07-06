@@ -38,6 +38,10 @@ class PublicacionController extends AbstractController
 #[IsGranted('IS_AUTHENTICATED_FULLY')]
 public function comentarPublicacion(int $id, Request $request, EntityManagerInterface $entityManager): Response
 {
+    if (!$this->isCsrfTokenValid('comentar', $request->request->get('_token'))) {
+        return $this->json(['error' => 'Token CSRF inválido.'], Response::HTTP_FORBIDDEN);
+    }
+
     $publicacion = $entityManager->getRepository(Publicacion::class)->find($id);
 
     if (!$publicacion) {

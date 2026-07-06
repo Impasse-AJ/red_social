@@ -11,6 +11,7 @@
         <img src="{{ asset('uploads/' ~ usuario.fotoPerfil) }}" alt="Foto de perfil">
         {% if propietario %}
             <form method="POST" action="{{ path('quitar_foto_perfil', { id: usuario.id }) }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('quitar_foto') }}">
                 <button type="submit">❌ Quitar foto</button>
             </form>
         {% endif %}
@@ -23,12 +24,14 @@
         <!-- 🔥 Sección de Amistad -->
         {% if solicitudPendiente == 'ninguna' %}
             <form method="POST" action="{{ path('enviar_solicitud', { id: usuario.id }) }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('amistad') }}">
                 <button type="submit">➕ Seguir</button>
             </form>
         {% elseif solicitudPendiente == 'pendiente' %}
             <p>⏳ Solicitud Enviada</p>
         {% elseif solicitudPendiente == 'aceptada' %}
             <form method="POST" action="{{ path('eliminar_amistad', { id: usuario.id }) }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('amistad') }}">
                 <button type="submit">❌ Dejar de seguir</button>
             </form>
         {% endif %}
@@ -40,6 +43,7 @@
         {% if propietario %}
             <h3>Publicar nuevo mensaje</h3>
             <form method="POST" action="{{ path('nueva_publicacion', { id: usuario.id }) }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('publicar') }}">
                 <textarea name="contenido" required placeholder="Escribe algo..."></textarea>
                 <button type="submit">Publicar</button>
             </form>
