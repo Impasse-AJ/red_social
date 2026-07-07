@@ -1,73 +1,87 @@
 {% extends 'base.html.twig' %}
+{% import '_ui.html.twig' as ui %}
 
-{% block title %}Perfil de {{ usuario.nombreUsuario }}{% endblock %}
+{% block title %}{{ usuario.nombreUsuario }} · SymSocial{% endblock %}
 
 {% block body %}
-  <link rel="stylesheet" href="{{ asset('css/perfil.css') }}">
-    <div class="container">
-    <h1>Perfil de {{ usuario.nombreUsuario }}</h1>
+    <header class="profile-header">
+        <div class="profile-top">
+            {{ ui.avatar(usuario, 'avatar-lg') }}
 
-    {% if usuario.fotoPerfil %}
-        <img src="{{ asset('uploads/' ~ usuario.fotoPerfil) }}" alt="Foto de perfil">
-        {% if propietario %}
-            <form method="POST" action="{{ path('quitar_foto_perfil', { id: usuario.id }) }}">
-                <input type="hidden" name="_token" value="{{ csrf_token('quitar_foto') }}">
-                <button type="submit">❌ Quitar foto</button>
-            </form>
-        {% endif %}
-    {% endif %}
+            <div class="profile-actions">
+                {% if propietario %}
+                    <a class="btn btn-outline btn-sm" href="{{ path('subir_foto_perfil', { id: usuario.id }) }}">{{ ui.icon('camera') }} Foto</a>
+                    <a class="btn btn-outline btn-sm" href="{{ path('editar_perfil', { id: usuario.id }) }}">{{ ui.icon('edit') }} Editar</a>
+                    {% if usuario.fotoPerfil and usuario.fotoPerfil != 'default-profile-picture.jpg' %}
+                        <form method="POST" action="{{ path('quitar_foto_perfil', { id: usuario.id }) }}">
+                            <input type="hidden" name="_token" value="{{ csrf_token('quitar_foto') }}">
+                            <button type="submit" class="btn btn-danger-outline btn-sm">{{ ui.icon('trash') }} Quitar foto</button>
+                        </form>
+                    {% endif %}
+                {% else %}
+                    {% if solicitudPendiente == 'ninguna' %}
+                        <form method="POST" action="{{ path('enviar_solicitud', { id: usuario.id }) }}">
+                            <input type="hidden" name="_token" value="{{ csrf_token('amistad') }}">
+                            <button type="submit" class="btn btn-primary btn-sm">{{ ui.icon('user-plus') }} Enviar solicitud</button>
+                        </form>
+                    {% elseif solicitudPendiente == 'pendiente' %}
+                        <span class="btn btn-outline btn-sm" style="cursor: default;">Solicitud enviada</span>
+                    {% elseif solicitudPendiente == 'aceptada' %}
+                        <form method="POST" action="{{ path('eliminar_amistad', { id: usuario.id }) }}">
+                            <input type="hidden" name="_token" value="{{ csrf_token('amistad') }}">
+                            <button type="submit" class="btn btn-danger-outline btn-sm">{{ ui.icon('user-minus') }} Dejar de ser amigos</button>
+                        </form>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
 
-    {% if propietario %}
-        <a href="{{ path('subir_foto_perfil', { id: usuario.id }) }}">📸 Subir Foto</a>
-        <a href="{{ path('editar_perfil', { id: usuario.id }) }}">✏️ Editar Perfil</a>
+        <h1 class="profile-name">{{ usuario.nombreUsuario }}</h1>
+        <p class="profile-sub">Miembro desde {{ usuario.fechaCreacion|date('m/Y') }}</p>
+    </header>
+
+    {% if privado %}
+        <div class="empty-state">
+            {{ ui.icon('lock') }}
+            <h3>Este perfil es privado</h3>
+            <p>Debes ser amigo de {{ usuario.nombreUsuario }} para ver sus publicaciones.</p>
+        </div>
     {% else %}
-        <!-- 🔥 Sección de Amistad -->
-        {% if solicitudPendiente == 'ninguna' %}
-            <form method="POST" action="{{ path('enviar_solicitud', { id: usuario.id }) }}">
-                <input type="hidden" name="_token" value="{{ csrf_token('amistad') }}">
-                <button type="submit">➕ Seguir</button>
-            </form>
-        {% elseif solicitudPendiente == 'pendiente' %}
-            <p>⏳ Solicitud Enviada</p>
-        {% elseif solicitudPendiente == 'aceptada' %}
-            <form method="POST" action="{{ path('eliminar_amistad', { id: usuario.id }) }}">
-                <input type="hidden" name="_token" value="{{ csrf_token('amistad') }}">
-                <button type="submit">❌ Dejar de seguir</button>
-            </form>
-        {% endif %}
-    {% endif %}
-
-    <!-- 🔥 Publicaciones (solo si son amigos) -->
-    {% if propietario or solicitudPendiente == 'aceptada' %}
-        <h2>Publicaciones</h2>
         {% if propietario %}
-            <h3>Publicar nuevo mensaje</h3>
-            <form method="POST" action="{{ path('nueva_publicacion', { id: usuario.id }) }}">
-                <input type="hidden" name="_token" value="{{ csrf_token('publicar') }}">
-                <textarea name="contenido" required placeholder="Escribe algo..."></textarea>
-                <button type="submit">Publicar</button>
-            </form>
+            <div class="composer">
+                {{ ui.avatar(usuario, 'avatar-md') }}
+                <form method="POST" action="{{ path('nueva_publicacion', { id: usuario.id }) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('publicar') }}">
+                    <textarea class="input" name="contenido" maxlength="255" required placeholder="¿Qué está pasando?"></textarea>
+                    <div class="composer-actions">
+                        <button type="submit" class="btn btn-primary btn-sm">Publicar</button>
+                    </div>
+                </form>
+            </div>
         {% endif %}
 
         {% if publicaciones is empty %}
-            <p>No hay publicaciones aún.</p>
+            <div class="empty-state">
+                <p>No hay publicaciones aún.</p>
+            </div>
         {% else %}
-            <ul>
-                {% for publicacion in publicaciones %}
-                    <li>
-                        <p>{{ publicacion.contenido }}</p>
-                        <small>Publicado el {{ publicacion.fechaCreacion|date('d/m/Y H:i') }}</small>
-                        <br>
-                        <a href="{{ path('ver_publicacion', { id: publicacion.id }) }}">💬 Ver comentarios</a>
-                    </li>
-                {% endfor %}
-            </ul>
+            {% for publicacion in publicaciones %}
+                <article class="post">
+                    {{ ui.avatar(usuario, 'avatar-md') }}
+                    <div class="post-body">
+                        <div class="post-meta">
+                            <span class="post-author">{{ usuario.nombreUsuario }}</span>
+                            <span class="post-date">· {{ publicacion.fechaCreacion|date('d/m/Y H:i') }}</span>
+                        </div>
+                        <p class="post-content">{{ publicacion.contenido }}</p>
+                        <div class="post-actions">
+                            <a class="post-action" href="{{ path('ver_publicacion', { id: publicacion.id }) }}">
+                                {{ ui.icon('comment') }} Comentarios
+                            </a>
+                        </div>
+                    </div>
+                </article>
+            {% endfor %}
         {% endif %}
-    {% else %}
-        <p>🔒 Debes ser amigo de {{ usuario.nombreUsuario }} para ver sus publicaciones.</p>
     {% endif %}
-
-    <a href="{{ path('ctrl_home') }}" class="btn">🏠 Volver al inicio</a>
-</div>
-
 {% endblock %}

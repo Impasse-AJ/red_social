@@ -1,33 +1,42 @@
 {% extends 'base.html.twig' %}
+{% import '_ui.html.twig' as ui %}
 
-{% block title %}Solicitudes de Amistad{% endblock %}
+{% block title %}Solicitudes · SymSocial{% endblock %}
 
 {% block body %}
-    <h1>Solicitudes de Amistad</h1>
+    <header class="page-header">
+        <h1>Solicitudes de amistad</h1>
+    </header>
 
     {% if solicitudes is empty %}
-        <p>No tienes solicitudes de amistad pendientes.</p>
+        <div class="empty-state">
+            {{ ui.icon('bell') }}
+            <p>No tienes solicitudes pendientes.</p>
+            <a class="btn btn-outline btn-sm" href="{{ path('descubrir') }}">{{ ui.icon('compass') }} Descubrir gente</a>
+        </div>
     {% else %}
-        <ul>
-            {% for solicitud in solicitudes %}
-                <li>
-                    <strong>{{ solicitud.solicitante.nombreUsuario }}</strong> te ha enviado una solicitud de amistad.
-                    
-                    <form method="POST" action="{{ path('responder_solicitud', { id: solicitud.id }) }}" style="display:inline;">
+        {% for solicitud in solicitudes %}
+            <div class="user-row">
+                <a href="{{ path('ver_perfil', { id: solicitud.solicitante.id }) }}">
+                    {{ ui.avatar(solicitud.solicitante, 'avatar-md') }}
+                </a>
+                <div class="user-row-info">
+                    <a class="post-author" href="{{ path('ver_perfil', { id: solicitud.solicitante.id }) }}">{{ solicitud.solicitante.nombreUsuario }}</a>
+                    <div class="post-date">quiere ser tu amigo</div>
+                </div>
+                <div class="user-row-actions">
+                    <form method="POST" action="{{ path('responder_solicitud', { id: solicitud.id }) }}">
                         <input type="hidden" name="_token" value="{{ csrf_token('responder_solicitud') }}">
                         <input type="hidden" name="accion" value="aceptar">
-                        <button type="submit" class="btn-aceptar">Aceptar ✅</button>
+                        <button type="submit" class="btn btn-primary btn-sm">{{ ui.icon('check') }} Aceptar</button>
                     </form>
-
-                    <form method="POST" action="{{ path('responder_solicitud', { id: solicitud.id }) }}" style="display:inline;">
+                    <form method="POST" action="{{ path('responder_solicitud', { id: solicitud.id }) }}">
                         <input type="hidden" name="_token" value="{{ csrf_token('responder_solicitud') }}">
                         <input type="hidden" name="accion" value="rechazar">
-                        <button type="submit" class="btn-rechazar">Rechazar ❌</button>
+                        <button type="submit" class="btn btn-danger-outline btn-sm">{{ ui.icon('x') }}</button>
                     </form>
-                </li>
-            {% endfor %}
-        </ul>
+                </div>
+            </div>
+        {% endfor %}
     {% endif %}
-
-    <a href="{{ path('ctrl_home') }}" class="btn">🏠 Volver al inicio</a>
 {% endblock %}

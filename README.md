@@ -1,17 +1,20 @@
-# Red Social
+# SymSocial
 
-Red social desarrollada con PHP y Symfony 7.2. Proyecto personal de [abrahampauta.com](https://abrahampauta.com).
+Red social privada desarrollada con PHP y Symfony 7.2. Proyecto personal de [abrahampauta.com](https://abrahampauta.com).
 
 Los usuarios se registran, activan su cuenta por correo, gestionan su perfil con foto, envían solicitudes de amistad y publican contenido que solo sus amigos pueden ver y comentar.
 
 ## Funcionalidades
 
-- Registro con activación de cuenta por correo electrónico.
-- Login/logout con Symfony Security (contraseñas hasheadas, cuentas inactivas bloqueadas).
-- Recuperación de contraseña por correo.
+- Landing page pública con prototipo visual del producto.
+- Registro con activación de cuenta por correo electrónico (token de un solo uso).
+- Login/logout con Symfony Security: CSRF, rate limiting y cuentas inactivas bloqueadas.
+- Recuperación de contraseña por correo con token seguro y caducidad.
+- Feed cronológico con las publicaciones propias y de amigos.
+- Página "Descubrir" con buscador de usuarios.
 - Perfiles con foto, edición de datos y privacidad: las publicaciones solo son visibles para amigos.
-- Sistema de amistades: enviar, aceptar y rechazar solicitudes, con contador de pendientes.
-- Publicaciones y comentarios.
+- Sistema de amistades: enviar, aceptar y rechazar solicitudes, con contador de pendientes en la barra de navegación.
+- Publicaciones y comentarios (envío y borrado sin recargar la página).
 
 ## Stack
 

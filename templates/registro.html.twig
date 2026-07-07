@@ -1,46 +1,50 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Registro{% endblock %}
+{% block title %}Crear cuenta · SymSocial{% endblock %}
+
+{% block nav %}{% endblock %}
+
+{% block main_class %}auth-wrap{% endblock %}
 
 {% block body %}
-<div class="registro-container">
-  <link rel="stylesheet" href="{{ asset('css/registro.css') }}">
-  <script src="{{ asset('js/validaciones.js') }}"></script>
-    <h1>Registro</h1>
+    <div class="auth-card">
+        <a class="brand" href="{{ path('landing') }}"><span class="brand-sym">Sym</span>Social</a>
+        <h1>Crea tu cuenta</h1>
 
-    {% if error %}
-        <div class="alert alert-danger">{{ error }}</div>
-    {% endif %}
+        {% if error %}
+            <div class="alert alert-error">{{ error }}</div>
+        {% endif %}
 
-    {% if success %}
-        <div class="alert alert-success">{{ success }}</div>
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                document.getElementById('registroForm').style.display = 'none';
-            });
-        </script>
-    {% endif %}
+        {% if success %}
+            <div class="alert alert-success">{{ success }}</div>
+            <div class="auth-links">
+                <a href="{{ path('ctrl_login') }}">Volver al inicio de sesión</a>
+            </div>
+        {% else %}
+            <form action="{{ path('registro') }}" method="POST" id="registroForm">
+                <input type="hidden" name="_token" value="{{ csrf_token('registro') }}">
+                <div class="form-field">
+                    <label for="email">Correo electrónico</label>
+                    <input class="input" type="email" id="email" name="email" required>
+                </div>
+                <div class="form-field">
+                    <label for="nombre_usuario">Nombre de usuario</label>
+                    <input class="input" type="text" id="nombre_usuario" name="nombre_usuario" minlength="3" maxlength="50" required>
+                </div>
+                <div class="form-field">
+                    <label for="contrasena">Contraseña</label>
+                    <input class="input" type="password" id="contrasena" name="contrasena" minlength="8" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Registrarse</button>
+            </form>
 
-    <form action="{{ path('registro') }}" method="POST" id="registroForm">
-        <input type="hidden" name="_token" value="{{ csrf_token('registro') }}">
-        <div class="form-group">
-            <label for="email">Correo Electrónico:</label>
-            <input type="text" id="email" name="email" required>
-
-            <label for="nombre_usuario">Nombre de Usuario:</label>
-            <input type="text" id="nombre_usuario" name="nombre_usuario" required>
-        </div>
-
-        <div class="form-group">
-            <label for="contrasena">Contraseña:</label>
-            <input type="password" id="contrasena" name="contrasena" required>
-        </div>
-
-        <button type="submit">Registrarse</button>
-    </form>
-    <!-- Botón para volver al login -->
-    <div class="volver-login">
-        <a href="{{ path('ctrl_login') }}" class="btn btn-primary">Volver al Login</a>
+            <div class="auth-links">
+                <span>¿Ya tienes cuenta? <a href="{{ path('ctrl_login') }}">Inicia sesión</a></span>
+            </div>
+        {% endif %}
     </div>
-</div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ asset('js/validaciones.js') }}"></script>
 {% endblock %}

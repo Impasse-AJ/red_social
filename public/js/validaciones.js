@@ -23,10 +23,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
-            // Expresión regular para validar la contraseña (al menos 6 caracteres)
-            const contrasenaRegex = /^.{6,}$/;
+            // La contraseña debe tener al menos 8 caracteres (igual que en el servidor)
+            const contrasenaRegex = /^.{8,}$/;
             if (!contrasenaRegex.test(contrasena)) {
-                alert("La contraseña debe tener al menos 6 caracteres.");
+                alert("La contraseña debe tener al menos 8 caracteres.");
                 event.preventDefault();
                 return;
             }

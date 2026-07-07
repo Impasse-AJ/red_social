@@ -1,60 +1,57 @@
 {% extends 'base.html.twig' %}
+{% import '_ui.html.twig' as ui %}
 
-{% block title %}Bienvenido - Red Social{% endblock %}
-
-{% block styles %}
-    <link rel="stylesheet" href="{{ asset('css/home.css') }}">
-{% endblock %}
+{% block title %}Inicio · SymSocial{% endblock %}
 
 {% block body %}
-    <!-- Botón de Logout en la parte superior derecha -->
-    <div class="logout-container">
-        <a href="{{ path('ctrl_logout') }}" class="logout-btn">
-            🚪 Cerrar Sesión
-        </a>
+    <header class="page-header">
+        <h1>Inicio</h1>
+    </header>
+
+    {# Caja para publicar directamente desde el feed #}
+    <div class="composer">
+        {{ ui.avatar(usuario, 'avatar-md') }}
+        <form method="POST" action="{{ path('nueva_publicacion', { id: usuario.id }) }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('publicar') }}">
+            <input type="hidden" name="redirect" value="home">
+            <textarea class="input" name="contenido" maxlength="255" required placeholder="¿Qué está pasando?"></textarea>
+            <div class="composer-actions">
+                <button type="submit" class="btn btn-primary btn-sm">Publicar</button>
+            </div>
+        </form>
     </div>
 
-    <h1>Bienvenido, {{ usuario.nombreUsuario }} 👋</h1>
-    <p>Explora la red social y conéctate con otros usuarios.</p>
-
-    <!-- 📌 Botón de Solicitudes de Amistad -->
-    <div class="solicitudes-container">
-        <a href="{{ path('ver_solicitudes') }}" class="btn-solicitudes">
-            📩 Solicitudes de Amistad 
-            {% if solicitudesPendientes > 0 %}
-                <span class="badge">{{ solicitudesPendientes }}</span>
-            {% endif %}
-        </a>
-    </div>
-
-    <!-- Sección de "Mi Perfil" -->
-    <p>
-        <a href="{{ path('ver_perfil', { id: usuario.id }) }}">👤 Mi Perfil</a>
-    </p>
-
-    <h2>Lista de Usuarios</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Nombre de Usuario</th>
-                <th>Perfil</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for u in usuarios %}
-                {% if u.id != usuario.id %} {# Excluye al usuario autenticado #}
-                    <tr>
-                        <td>{{ u.nombreUsuario }}</td>
-                        <td>
-                            <a href="{{ path('ver_perfil', { id: u.id }) }}">Ver Perfil</a>
-                        </td>
-                    </tr>
-                {% endif %}
+    {# Feed: publicaciones propias y de amigos #}
+    {% if publicaciones is empty %}
+        <div class="empty-state">
+            {% if amigos == 0 %}
+                <h3>Tu feed está vacío</h3>
+                <p>Aún no tienes amigos en SymSocial. Encuentra gente y envía tu primera solicitud.</p>
+                <a class="btn btn-primary" href="{{ path('descubrir') }}">{{ ui.icon('compass') }} Descubrir gente</a>
             {% else %}
-                <tr>
-                    <td colspan="2">No hay usuarios registrados.</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                <h3>Nada por aquí todavía</h3>
+                <p>Ni tú ni tus amigos habéis publicado nada aún. ¡Rompe el hielo!</p>
+            {% endif %}
+        </div>
+    {% else %}
+        {% for publicacion in publicaciones %}
+            <article class="post">
+                <a href="{{ path('ver_perfil', { id: publicacion.usuario.id }) }}">
+                    {{ ui.avatar(publicacion.usuario, 'avatar-md') }}
+                </a>
+                <div class="post-body">
+                    <div class="post-meta">
+                        <a class="post-author" href="{{ path('ver_perfil', { id: publicacion.usuario.id }) }}">{{ publicacion.usuario.nombreUsuario }}</a>
+                        <span class="post-date">· {{ publicacion.fechaCreacion|date('d/m/Y H:i') }}</span>
+                    </div>
+                    <p class="post-content">{{ publicacion.contenido }}</p>
+                    <div class="post-actions">
+                        <a class="post-action" href="{{ path('ver_publicacion', { id: publicacion.id }) }}">
+                            {{ ui.icon('comment') }} Comentarios
+                        </a>
+                    </div>
+                </div>
+            </article>
+        {% endfor %}
+    {% endif %}
 {% endblock %}

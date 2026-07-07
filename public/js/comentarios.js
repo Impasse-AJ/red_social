@@ -6,12 +6,12 @@ document.addEventListener("DOMContentLoaded", function () {
     const papelera = document.getElementById("papelera");
     const storageKey = "comentarioPendiente";
 
-    // ✅ Restaurar comentario guardado si existe
+    // Restaurar comentario guardado si existe
     if (localStorage.getItem(storageKey)) {
         textarea.value = localStorage.getItem(storageKey);
     }
 
-    // ✅ Guardar automáticamente lo que escribe el usuario
+    // Guardar automáticamente lo que escribe el usuario
     textarea.addEventListener("input", function () {
         localStorage.setItem(storageKey, textarea.value);
     });
@@ -45,66 +45,72 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
-            // ✅ Crear nuevo comentario dinámicamente con estilos
-            const nuevoComentario = document.createElement("li");
-            nuevoComentario.id = `comentario-${data.id}`;
-            nuevoComentario.classList.add("draggable-comentario");
-            nuevoComentario.setAttribute("draggable", true);
-            nuevoComentario.innerHTML = `<strong>${data.usuario}</strong>: ${data.contenido} 
-                <small>(${data.fecha})</small>`;
+            comentariosLista.appendChild(crearComentario(data));
 
-            // 🎨 Estilos para los comentarios
-            nuevoComentario.style.backgroundColor = "#fff";
-            nuevoComentario.style.padding = "10px";
-            nuevoComentario.style.marginBottom = "10px";
-            nuevoComentario.style.borderRadius = "5px";
-            nuevoComentario.style.boxShadow = "0 2px 5px rgba(0, 0, 0, 0.1)";
-            nuevoComentario.style.textAlign = "left";
-            nuevoComentario.style.cursor = "grab";
-
-            comentariosLista.appendChild(nuevoComentario);
-
-            // ✅ Habilitar Drag & Drop en el nuevo comentario
-            addDragFunctionality(nuevoComentario);
-
-            // ✅ Ocultar mensaje "No hay comentarios" si es necesario
+            // Ocultar mensaje "No hay comentarios" si es necesario
             if (noComentarios) {
                 noComentarios.style.display = "none";
             }
 
-            // ✅ Limpiar el textarea y el localStorage después de enviar
+            // Limpiar el textarea y el localStorage después de enviar
             textarea.value = "";
             localStorage.removeItem(storageKey);
         })
         .catch(error => console.error("Error al enviar el comentario:", error));
     });
 
+    // Construye el <li> del comentario con el mismo marcado que la plantilla.
+    // Se usa textContent (no innerHTML) para que el contenido no pueda inyectar HTML.
+    function crearComentario(data) {
+        const li = document.createElement("li");
+        li.id = `comentario-${data.id}`;
+        li.classList.add("comment", "draggable-comentario");
+        li.setAttribute("draggable", true);
+
+        const avatar = document.createElement("img");
+        avatar.className = "avatar avatar-sm";
+        avatar.src = form.dataset.avatar;
+        avatar.alt = data.usuario;
+
+        const body = document.createElement("div");
+        body.className = "post-body";
+
+        const meta = document.createElement("div");
+        meta.className = "post-meta";
+
+        const autor = document.createElement("span");
+        autor.className = "post-author";
+        autor.textContent = data.usuario;
+
+        const fecha = document.createElement("span");
+        fecha.className = "post-date";
+        fecha.textContent = `· ${data.fecha}`;
+
+        const contenidoEl = document.createElement("p");
+        contenidoEl.className = "post-content";
+        contenidoEl.textContent = data.contenido;
+
+        meta.append(autor, fecha);
+        body.append(meta, contenidoEl);
+        li.append(avatar, body);
+
+        addDragFunctionality(li);
+        return li;
+    }
+
     if (papelera) {
-        // 🎨 Estilos de la papelera
-        papelera.style.backgroundColor = "#f8d7da";
-        papelera.style.color = "#721c24";
-        papelera.style.padding = "10px";
-        papelera.style.border = "2px dashed #721c24";
-        papelera.style.textAlign = "center";
-        papelera.style.marginTop = "15px";
-        papelera.style.fontWeight = "bold";
-        papelera.style.transition = "background 0.3s ease";
-        
         papelera.addEventListener("dragover", function (event) {
             event.preventDefault();
-            papelera.style.backgroundColor = "#dc3545";
-            papelera.style.color = "#fff";
+            papelera.classList.add("dragover");
         });
 
         papelera.addEventListener("dragleave", function () {
-            papelera.style.backgroundColor = "#f8d7da";
-            papelera.style.color = "#721c24";
+            papelera.classList.remove("dragover");
         });
 
         papelera.addEventListener("drop", function (event) {
             event.preventDefault();
-            papelera.style.backgroundColor = "#f8d7da";
-            papelera.style.color = "#721c24";
+            papelera.classList.remove("dragover");
 
             const comentarioIdCompleto = event.dataTransfer.getData("text");
 

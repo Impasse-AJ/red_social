@@ -1,0 +1,159 @@
+{% extends 'base.html.twig' %}
+{% import '_ui.html.twig' as ui %}
+
+{% block title %}SymSocial — Tu círculo, sin ruido{% endblock %}
+
+{% block nav %}{% endblock %}
+
+{% block main_class %}landing{% endblock %}
+
+{% block body %}
+    {# ===== Hero sobre cielo de día animado (adaptado de Uiverse.io, autora kiranmayee-abbireddy) ===== #}
+    <div class="hero-sky">
+        <div class="sky-canvas" aria-hidden="true">
+            <div class="sky-stars sky-stars-1"></div>
+            <div class="sky-stars sky-stars-2"></div>
+            <div class="sky-stars sky-stars-3"></div>
+            <div class="sky-meteor sky-m1"></div>
+            <div class="sky-meteor sky-m2"></div>
+            <div class="sky-sun"></div>
+        </div>
+
+        <nav class="landing-nav">
+            <a class="brand" href="{{ path('landing') }}"><span class="brand-sym">Sym</span>Social</a>
+            <div class="actions">
+                <a class="btn btn-outline" href="{{ path('ctrl_login') }}">Iniciar sesión</a>
+                <a class="btn btn-primary" href="{{ path('registro') }}">Crear cuenta</a>
+            </div>
+        </nav>
+
+    <section class="hero">
+        <div>
+            <h1>Tu círculo, sin ruido.<br>
+                <span class="hero-brand" aria-label="SymSocial">
+                    <span class="hero-letter brand-sym">S</span><span class="hero-letter brand-sym">y</span><span class="hero-letter brand-sym">m</span><span class="hero-letter">S</span><span class="hero-letter">o</span><span class="hero-letter">c</span><span class="hero-letter">i</span><span class="hero-letter">a</span><span class="hero-letter">l</span>
+                </span>
+            </h1>
+            <p class="lead">
+                Una red social pequeña y privada: compartes solo con tus amigos,
+                tus publicaciones no son públicas y tú decides quién entra en tu círculo.
+            </p>
+            <div class="hero-cta">
+                <a class="btn btn-primary" href="{{ path('registro') }}">Crear cuenta gratis</a>
+                <a class="btn btn-outline" href="{{ path('ctrl_login') }}">Ya tengo cuenta</a>
+            </div>
+        </div>
+
+        {# Prototipo del feed: esto es lo que se encuentra el usuario al entrar #}
+        <div class="mockup" aria-hidden="true">
+            <div class="mockup-bar">
+                <span class="mockup-dot"></span><span class="mockup-dot"></span><span class="mockup-dot"></span>
+                <span class="mockup-url">social.abrahampauta.com</span>
+            </div>
+            <div class="mockup-body">
+                <div class="post">
+                    <span class="mock-avatar" style="background:#1d9bf0">L</span>
+                    <div class="post-body">
+                        <div class="post-meta"><span class="post-author">lucia_dev</span><span class="post-date">· hace 2 min</span></div>
+                        <p class="post-content">¡Por fin viernes! ¿Alguien se apunta a una ruta este finde? 🏔️</p>
+                        <div class="post-actions"><span class="post-action">{{ ui.icon('comment') }} 3</span></div>
+                    </div>
+                </div>
+                <div class="post">
+                    <span class="mock-avatar" style="background:#00ba7c">M</span>
+                    <div class="post-body">
+                        <div class="post-meta"><span class="post-author">marco.92</span><span class="post-date">· hace 1 h</span></div>
+                        <p class="post-content">Acabo de terminar mi primer proyecto en Symfony. Qué gustazo verlo funcionando en producción.</p>
+                        <div class="post-actions"><span class="post-action">{{ ui.icon('comment') }} 5</span></div>
+                    </div>
+                </div>
+                <div class="post">
+                    <span class="mock-avatar" style="background:#f4212e">S</span>
+                    <div class="post-body">
+                        <div class="post-meta"><span class="post-author">sara_m</span><span class="post-date">· hace 3 h</span></div>
+                        <p class="post-content">Foto nueva de perfil. Se aceptan opiniones (amables) 😄</p>
+                        <div class="post-actions"><span class="post-action">{{ ui.icon('comment') }} 12</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    </div>
+
+    {# ===== Qué te vas a encontrar ===== #}
+    <section class="landing-section">
+        <h2>Qué te vas a encontrar dentro</h2>
+        <p class="section-sub">
+            SymSocial no intenta ser la próxima gran red: es un espacio cerrado para tu gente,
+            donde nada es público y nadie desconocido puede ver lo que compartes.
+        </p>
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">{{ ui.icon('lock') }}</div>
+                <h3>Perfiles privados de verdad</h3>
+                <p>Tus publicaciones solo las ven tus amigos. Si alguien no está en tu círculo, ve un perfil cerrado.</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">{{ ui.icon('users') }}</div>
+                <h3>Amistades con consentimiento</h3>
+                <p>Envías una solicitud, la otra persona decide. Sin seguidores fantasma ni cuentas que te observan.</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">{{ ui.icon('comment') }}</div>
+                <h3>Publica y conversa</h3>
+                <p>Un feed cronológico con lo que publica tu gente, y comentarios para seguir la conversación.</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">{{ ui.icon('shield') }}</div>
+                <h3>Cuenta protegida</h3>
+                <p>Activación por correo, recuperación de contraseña segura y protección contra accesos automatizados.</p>
+            </div>
+        </div>
+    </section>
+
+    {# ===== Cómo está construido (para el visitante técnico) ===== #}
+    <section class="landing-section">
+        <h2>Cómo está construido</h2>
+        <p class="section-sub">
+            SymSocial es un proyecto de <a href="https://abrahampauta.com">Abraham Pauta</a>,
+            desarrollador full-stack que construye sus proyectos de principio a fin: código,
+            infraestructura y operación en producción.
+        </p>
+        <p class="section-sub">
+            Esta aplicación no es un ejercicio de tutorial. El backend está desarrollado con PHP
+            y Symfony aplicando prácticas de producto real —autenticación con activación por correo,
+            protección CSRF, límite de intentos, tokens de un solo uso y control de acceso— y se
+            despliega en un VPS propio administrado por él mismo: contenedores Docker tras un
+            reverse proxy, backups automatizados y monitorización continua.
+        </p>
+        <div class="stack-list">
+            <span class="stack-item">PHP 8</span>
+            <span class="stack-item">Symfony 7.2</span>
+            <span class="stack-item">Doctrine ORM</span>
+            <span class="stack-item">MySQL 8</span>
+            <span class="stack-item">Twig</span>
+            <span class="stack-item">Docker</span>
+            <span class="stack-item">Caddy</span>
+            <span class="stack-item">Cloudflare</span>
+        </div>
+    </section>
+
+    {# ===== CTA final ===== #}
+    <section class="landing-section">
+        <div class="landing-cta">
+            <h2>Pruébalo con tu gente</h2>
+            <p>Crear una cuenta lleva menos de un minuto. Solo necesitas un correo.</p>
+            <a class="btn btn-primary" href="{{ path('registro') }}">Crear mi cuenta</a>
+        </div>
+    </section>
+
+    <footer class="landing-footer">
+        <p>
+            <span class="brand"><span class="brand-sym">Sym</span>Social</span> — proyecto personal para portfolio.
+        </p>
+        <p>
+            Hecho por <a href="https://abrahampauta.com">abrahampauta.com</a> ·
+            <a href="https://github.com/Impasse-AJ/red_social">Código en GitHub</a>
+        </p>
+    </footer>
+{% endblock %}

@@ -3,70 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Red Social{% endblock %}</title>
-    
-    <style>
-    /* Estilos generales */
-    body {
-        font-family: Arial, sans-serif;
-        background-color: #f4f4f4;
-        margin: 0;
-        padding: 20px;
-        text-align: center;
-        position: relative;
-    }
-
-    h1 {
-        color: #333;
-    }
-
-    p {
-        font-size: 18px;
-        color: #555;
-    }
-
-    /* Estilos del botón de logout */
-    .logout-container {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-    }
-
-    .logout-btn {
-        display: flex;
-        align-items: center;
-        background-color: #dc3545;
-        color: white;
-        padding: 10px 15px;
-        border-radius: 8px;
-        text-decoration: none;
-        font-weight: bold;
-        transition: background-color 0.3s ease, transform 0.2s ease;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    .logout-btn:hover {
-        background-color: #c82333;
-        transform: scale(1.05);
-    }
-
-    .logout-btn i {
-        margin-right: 8px;
-    }
-    </style>
-
+    <title>{% block title %}SymSocial{% endblock %}</title>
+    <link rel="stylesheet" href="{{ asset('styles/app.css') }}">
     {% block styles %}{% endblock %}
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
+{% import '_ui.html.twig' as ui %}
 
-    <!-- Botón de Logout en la parte superior derecha -->
-    <div class="logout-container">
-        <a href="{{ path('ctrl_logout') }}" class="logout-btn">
-            🚪 Cerrar Sesión
-        </a>
-    </div>
+{% block nav %}
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <a class="brand" href="{{ app.user ? path('ctrl_home') : path('landing') }}"><span class="brand-sym">Sym</span>Social</a>
+
+            {% if app.user %}
+                {% set pendientes = solicitudes_pendientes() %}
+                <div class="nav-links">
+                    <a class="nav-link" href="{{ path('ctrl_home') }}" title="Inicio">
+                        {{ ui.icon('home') }}<span class="nav-label">Inicio</span>
+                    </a>
+                    <a class="nav-link" href="{{ path('descubrir') }}" title="Descubrir gente">
+                        {{ ui.icon('compass') }}<span class="nav-label">Descubrir</span>
+                    </a>
+                    <a class="nav-link" href="{{ path('ver_solicitudes') }}" title="Solicitudes de amistad">
+                        {{ ui.icon('bell') }}<span class="nav-label">Solicitudes</span>
+                        {% if pendientes > 0 %}<span class="badge">{{ pendientes }}</span>{% endif %}
+                    </a>
+                    <a class="nav-link" href="{{ path('ver_perfil', { id: app.user.id }) }}" title="Mi perfil">
+                        {{ ui.icon('user') }}<span class="nav-label">Perfil</span>
+                    </a>
+                    <a class="nav-link" href="{{ path('ctrl_logout') }}" title="Cerrar sesión">
+                        {{ ui.icon('logout') }}
+                    </a>
+                </div>
+            {% else %}
+                <div class="nav-links">
+                    <a class="btn btn-outline btn-sm" href="{{ path('ctrl_login') }}">Iniciar sesión</a>
+                    <a class="btn btn-primary btn-sm" href="{{ path('registro') }}">Registrarse</a>
+                </div>
+            {% endif %}
+        </div>
+    </nav>
+{% endblock %}
+
+<main class="{% block main_class %}app-shell{% endblock %}">
+    {% for label in ['success', 'error', 'info'] %}
+        {% for mensaje in app.flashes(label) %}
+            <div class="alert alert-{{ label }}">{{ mensaje }}</div>
+        {% endfor %}
+    {% endfor %}
 
     {% block body %}{% endblock %}
+</main>
+
+{% block scripts %}{% endblock %}
 </body>
 </html>
-

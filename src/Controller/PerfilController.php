@@ -111,6 +111,11 @@ class PerfilController extends AbstractController
             $entityManager->flush();
         }
 
+        // Desde el feed se vuelve al feed; desde el perfil, al perfil
+        if ($request->request->get('redirect') === 'home') {
+            return $this->redirectToRoute('ctrl_home');
+        }
+
         return $this->redirectToRoute('ver_perfil', ['id' => $id]);
     }
     #[Route('/perfil/{id}/editar', name: 'editar_perfil')]

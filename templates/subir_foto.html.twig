@@ -1,24 +1,34 @@
 {% extends 'base.html.twig' %}
+{% import '_ui.html.twig' as ui %}
 
-{% block title %}Subir Foto de Perfil{% endblock %}
-
-{% block styles %}
-
-{% endblock %}
+{% block title %}Foto de perfil · SymSocial{% endblock %}
 
 {% block body %}
-    <div class="container">
-        <h1>Subir Foto de Perfil</h1>
-<link rel="stylesheet" href="{{ asset('css/subir_foto.css') }}">
+    <header class="page-header">
+        <a class="nav-link" href="{{ path('ver_perfil', { id: usuario.id }) }}" title="Volver al perfil">
+            {{ ui.icon('arrow-left') }}
+        </a>
+        <h1>Foto de perfil</h1>
+    </header>
+
+    <div class="card">
         {% if error is defined and error %}
-            <p class="error">{{ error }}</p>
+            <div class="alert alert-error">{{ error }}</div>
         {% endif %}
+
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.25rem;">
+            {{ ui.avatar(usuario, 'avatar-lg') }}
+            <p style="color: var(--text-muted); margin: 0; font-size: .9rem;">
+                JPG, PNG, WEBP o GIF. Máximo 2 MB.
+            </p>
+        </div>
+
         <form method="POST" enctype="multipart/form-data">
             <input type="hidden" name="_token" value="{{ csrf_token('subir_foto') }}">
-            <input type="file" name="foto" accept="image/*" required>
-            <button type="submit">Subir</button>
+            <div class="form-field">
+                <input class="input" type="file" name="foto" accept="image/*" required>
+            </div>
+            <button type="submit" class="btn btn-primary">{{ ui.icon('camera') }} Subir foto</button>
         </form>
-
-        <a href="{{ path('ver_perfil', { id: usuario.id }) }}">Volver al Perfil</a>
     </div>
 {% endblock %}

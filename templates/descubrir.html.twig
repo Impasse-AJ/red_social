@@ -1,0 +1,37 @@
+{% extends 'base.html.twig' %}
+{% import '_ui.html.twig' as ui %}
+
+{% block title %}Descubrir · SymSocial{% endblock %}
+
+{% block body %}
+    <header class="page-header">
+        <h1>Descubrir gente</h1>
+    </header>
+
+    <form class="search-form" method="GET" action="{{ path('descubrir') }}">
+        <input class="input" type="search" name="q" value="{{ busqueda }}" placeholder="Buscar por nombre de usuario...">
+        <button type="submit" class="btn btn-outline">{{ ui.icon('search') }}<span class="nav-label">Buscar</span></button>
+    </form>
+
+    {% if usuarios is empty %}
+        <div class="empty-state">
+            {% if busqueda %}
+                <p>No hay nadie que se llame «{{ busqueda }}».</p>
+            {% else %}
+                <p>No hay más usuarios registrados todavía.</p>
+            {% endif %}
+        </div>
+    {% else %}
+        {% for u in usuarios %}
+            <div class="user-row">
+                <a href="{{ path('ver_perfil', { id: u.id }) }}">{{ ui.avatar(u, 'avatar-md') }}</a>
+                <div class="user-row-info">
+                    <a class="post-author" href="{{ path('ver_perfil', { id: u.id }) }}">{{ u.nombreUsuario }}</a>
+                </div>
+                <div class="user-row-actions">
+                    <a class="btn btn-outline btn-sm" href="{{ path('ver_perfil', { id: u.id }) }}">Ver perfil</a>
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endblock %}
