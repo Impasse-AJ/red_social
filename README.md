@@ -49,15 +49,10 @@ Los usuarios se registran, activan su cuenta por correo, gestionan su perfil con
 
    Rellenar `APP_SECRET`, `DATABASE_URL` y `MAILER_DSN`. El archivo `.env` no se versiona.
 
-3. Levantar MySQL. Ejemplo con Docker:
+3. Levantar la base de datos del proyecto (MySQL del docker-compose):
 
    ```bash
-   docker run -d --name redsocial-mysql \
-     -e MYSQL_ALLOW_EMPTY_PASSWORD=yes \
-     -e MYSQL_DATABASE=redsocial \
-     -p 3306:3306 \
-     -v redsocial_mysql_data:/var/lib/mysql \
-     mysql:8.0
+   docker compose up -d mysql
    ```
 
 4. Crear el esquema con las migraciones y cargar los datos de demostración:
@@ -73,9 +68,32 @@ Los usuarios se registran, activan su cuenta por correo, gestionan su perfil con
    symfony server:start -d
    ```
 
-6. Abrir `http://127.0.0.1:8000/`. Los usuarios de demostración (`lucia@example.com`,
-   `marco@example.com`, `sara@example.com`, `alex@example.com`) comparten la contraseña
-   `symsocial123`.
+6. Abrir `http://127.0.0.1:8000/`. Los usuarios de demostración (`abraham@social.com`,
+   `lucia@example.com`, `marco@example.com`, `sara@example.com`, `alex@example.com`)
+   comparten la contraseña `symsocial123`.
+
+## Despliegue con Docker (producción)
+
+El stack completo (app + MySQL + phpMyAdmin interno) se levanta con:
+
+```bash
+docker compose up -d --build          # construir y arrancar todo
+docker compose exec app php bin/console doctrine:migrations:migrate -n
+```
+
+| Servicio | URL local | Notas |
+|---|---|---|
+| Aplicación | `http://127.0.0.1:8090` | En el VPS, detrás de Caddy |
+| phpMyAdmin | `http://127.0.0.1:8082` | Solo interno, nunca expuesto |
+| MySQL | `127.0.0.1:3308` | Volumen `symsocial_mysql_data` |
+
+Comandos habituales:
+
+```bash
+docker compose logs -f app     # logs de la aplicación
+docker compose down            # parar (los datos persisten en los volúmenes)
+docker compose down -v         # parar Y BORRAR los datos
+```
 
 ## Arquitectura
 

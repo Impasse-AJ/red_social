@@ -1,0 +1,14 @@
+.git
+.gitignore
+.env
+.env.*
+var/
+vendor/
+public/assets/
+public/uploads/
+tests/
+phpstan.dist.neon
+phpunit.xml.dist
+docker-compose.yml
+Dockerfile
+README.md
