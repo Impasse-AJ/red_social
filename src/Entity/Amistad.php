@@ -1,17 +1,18 @@
 <?php
 namespace App\Entity;
 
+use App\Enum\EstadoAmistad;
+use App\Repository\AmistadRepository;
 use Doctrine\ORM\Mapping as ORM;
-use App\Entity\Usuario;
 
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: AmistadRepository::class)]
 #[ORM\Table(name: 'amistades')]
 class Amistad
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
-    private $id;
+    private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: Usuario::class)]
     #[ORM\JoinColumn(name: 'id_solicitante', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
@@ -21,8 +22,8 @@ class Amistad
     #[ORM\JoinColumn(name: 'id_receptor', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private Usuario $receptor;
 
-    #[ORM\Column(type: 'string', length: 10)]
-    private string $estado = 'ninguna';
+    #[ORM\Column(type: 'string', length: 10, enumType: EstadoAmistad::class)]
+    private EstadoAmistad $estado = EstadoAmistad::Pendiente;
 
     public function getId(): ?int
     {
@@ -51,17 +52,13 @@ class Amistad
         return $this;
     }
 
-    public function getEstado(): string
+    public function getEstado(): EstadoAmistad
     {
         return $this->estado;
     }
 
-    public function setEstado(string $estado): self
+    public function setEstado(EstadoAmistad $estado): self
     {
-        if (!in_array($estado, ['niguna','pendiente', 'aceptada', 'rechazada'])) {
-            throw new \InvalidArgumentException("Estado de amistad inválido.");
-        }
-
         $this->estado = $estado;
         return $this;
     }

@@ -1,26 +1,32 @@
 <?php
 namespace App\Entity;
 
+use App\Repository\PublicacionRepository;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: PublicacionRepository::class)]
 #[ORM\Table(name: 'publicaciones')]
 class Publicacion
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
-    private $id;
+    private ?int $id = null;
 
-    #[ORM\ManyToOne(targetEntity: 'App\Entity\Usuario')]
+    #[ORM\ManyToOne(targetEntity: Usuario::class)]
     #[ORM\JoinColumn(name: 'id_usuario', referencedColumnName: 'id', onDelete: 'CASCADE')]
-    private $usuario;
+    private ?Usuario $usuario = null;
 
     #[ORM\Column(type: 'text')]
-    private $contenido;
+    private string $contenido = '';
 
     #[ORM\Column(type: 'datetime')]
-    private $fechaCreacion;
+    private \DateTimeInterface $fechaCreacion;
+
+    public function __construct()
+    {
+        $this->fechaCreacion = new \DateTime();
+    }
 
     public function getId(): ?int
     {
@@ -38,7 +44,7 @@ class Publicacion
         return $this;
     }
 
-    public function getContenido(): ?string
+    public function getContenido(): string
     {
         return $this->contenido;
     }
@@ -49,7 +55,7 @@ class Publicacion
         return $this;
     }
 
-    public function getFechaCreacion(): ?\DateTimeInterface
+    public function getFechaCreacion(): \DateTimeInterface
     {
         return $this->fechaCreacion;
     }

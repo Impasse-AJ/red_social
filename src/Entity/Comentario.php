@@ -1,30 +1,31 @@
 <?php
 namespace App\Entity;
 
+use App\Repository\ComentarioRepository;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: ComentarioRepository::class)]
 #[ORM\Table(name: 'comentarios')]
 class Comentario
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
-    private $id;
+    private ?int $id = null;
 
-    #[ORM\ManyToOne(targetEntity: 'App\Entity\Publicacion')]
+    #[ORM\ManyToOne(targetEntity: Publicacion::class)]
     #[ORM\JoinColumn(name: 'id_publicacion', referencedColumnName: 'id', onDelete: 'CASCADE')]
-    private $publicacion;
+    private ?Publicacion $publicacion = null;
 
-    #[ORM\ManyToOne(targetEntity: 'App\Entity\Usuario')]
+    #[ORM\ManyToOne(targetEntity: Usuario::class)]
     #[ORM\JoinColumn(name: 'id_usuario', referencedColumnName: 'id', onDelete: 'CASCADE')]
-    private $usuario;
+    private ?Usuario $usuario = null;
 
     #[ORM\Column(type: 'text')]
-    private $contenido;
+    private string $contenido = '';
 
     #[ORM\Column(type: 'datetime')]
-    private $fechaCreacion;
+    private \DateTimeInterface $fechaCreacion;
 
     public function __construct()
     {
@@ -58,7 +59,7 @@ class Comentario
         return $this;
     }
 
-    public function getContenido(): ?string
+    public function getContenido(): string
     {
         return $this->contenido;
     }
@@ -69,7 +70,7 @@ class Comentario
         return $this;
     }
 
-    public function getFechaCreacion(): ?\DateTimeInterface
+    public function getFechaCreacion(): \DateTimeInterface
     {
         return $this->fechaCreacion;
     }

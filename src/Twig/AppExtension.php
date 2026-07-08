@@ -2,8 +2,8 @@
 
 namespace App\Twig;
 
-use App\Entity\Amistad;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Entity\Usuario;
+use App\Repository\AmistadRepository;
 use Symfony\Bundle\SecurityBundle\Security;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
@@ -12,7 +12,7 @@ class AppExtension extends AbstractExtension
 {
     public function __construct(
         private Security $security,
-        private EntityManagerInterface $em
+        private AmistadRepository $amistades
     ) {
     }
 
@@ -31,13 +31,10 @@ class AppExtension extends AbstractExtension
     {
         $usuario = $this->security->getUser();
 
-        if (!$usuario) {
+        if (!$usuario instanceof Usuario) {
             return 0;
         }
 
-        return $this->em->getRepository(Amistad::class)->count([
-            'receptor' => $usuario,
-            'estado' => 'pendiente',
-        ]);
+        return $this->amistades->contarPendientesDe($usuario);
     }
 }

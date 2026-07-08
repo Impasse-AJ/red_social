@@ -60,10 +60,11 @@ Los usuarios se registran, activan su cuenta por correo, gestionan su perfil con
      mysql:8.0
    ```
 
-4. Importar el esquema y los datos de ejemplo:
+4. Crear el esquema con las migraciones y cargar los datos de demostración:
 
    ```bash
-   docker exec -i redsocial-mysql mysql -uroot < redsocial.sql
+   php bin/console doctrine:migrations:migrate -n
+   php bin/console doctrine:fixtures:load -n
    ```
 
 5. Arrancar el servidor de desarrollo:
@@ -72,24 +73,46 @@ Los usuarios se registran, activan su cuenta por correo, gestionan su perfil con
    symfony server:start -d
    ```
 
-6. Abrir `http://127.0.0.1:8000/login`. El esquema incluye usuarios de ejemplo.
+6. Abrir `http://127.0.0.1:8000/`. Los usuarios de demostración (`lucia@example.com`,
+   `marco@example.com`, `sara@example.com`, `alex@example.com`) comparten la contraseña
+   `symsocial123`.
 
-## Estructura
+## Arquitectura
 
 ```
 src/
-├── Controller/   # Login, registro, perfil, publicaciones, amistades, comentarios
-├── Entity/       # Usuario, Publicacion, Comentario, Amistad
-└── Security/     # UserChecker (bloquea cuentas sin activar)
-templates/        # Vistas Twig
-public/css/       # Hojas de estilo por vista
-redsocial.sql     # Esquema de base de datos y datos de ejemplo
+├── Controller/     # Controladores finos: validan la petición y delegan
+├── Entity/         # Usuario, Publicacion, Comentario, Amistad (tipadas, con constraints)
+├── Enum/           # EstadoAmistad (backed enum de PHP 8.1 persistido por Doctrine)
+├── Repository/     # Consultas de dominio (feed, amistades, búsqueda de usuarios)
+├── Security/       # UserChecker + Voters (permisos de perfil, publicación, comentario, amistad)
+├── Service/        # EmailManager (correos transaccionales)
+├── DataFixtures/   # Datos de demostración
+└── Twig/           # Extensión con helpers de plantilla
+migrations/         # Esquema de base de datos versionado (Doctrine Migrations)
+templates/          # Vistas Twig (base + landing + app)
+assets/styles/      # Sistema de diseño único (variables CSS, servido con AssetMapper)
+tests/Functional/   # Tests funcionales (acceso, registro, privacidad, feed)
+```
+
+La autorización usa Voters de Symfony: la privacidad entre amigos se decide en
+`PublicacionVoter`/`PerfilVoter`, no en los controladores.
+
+## Calidad de código
+
+```bash
+# Tests funcionales (necesitan la base de datos de test)
+php bin/console --env=test doctrine:database:create --if-not-exists
+php bin/console --env=test doctrine:migrations:migrate -n
+php bin/phpunit
+
+# Análisis estático (PHPStan nivel 6, sin baseline)
+vendor/bin/phpstan analyse
 ```
 
 ## Estado del proyecto
 
-En evolución hacia despliegue en producción bajo subdominio propio. Pendientes:
+Seguridad reforzada (tokens de un solo uso, CSRF, rate limiting), interfaz rediseñada
+con landing pública, y lógica organizada en capas. Pendiente:
 
-- Refuerzo de seguridad (tokens de activación y recuperación, CSRF, validación de entrada).
-- Rediseño completo de la interfaz y landing page pública.
-- Dockerización y despliegue en VPS (Caddy + Docker Compose).
+- Dockerización y despliegue en VPS (Caddy + Docker Compose) bajo subdominio propio.

@@ -2,16 +2,16 @@
 
 namespace App\Controller;
 
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\HttpFoundation\Request;
-use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\Mailer\MailerInterface;
-use Symfony\Component\Mime\Email;
 use App\Entity\Usuario;
+use App\Repository\UsuarioRepository;
+use App\Service\EmailManager;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Routing\Annotation\Route;
 
 class RecuperarContrasenaController extends AbstractController
 {
@@ -19,7 +19,7 @@ class RecuperarContrasenaController extends AbstractController
     private const MENSAJE_NEUTRO = 'Si existe una cuenta con ese correo, recibirás un enlace de recuperación en unos minutos.';
 
     #[Route('/recuperar-password', name: 'recuperar_password')]
-    public function mostrarFormulario(Request $request)
+    public function mostrarFormulario(): Response
     {
         return $this->render('recuperar_password.html.twig', [
             'success' => null,
@@ -30,11 +30,12 @@ class RecuperarContrasenaController extends AbstractController
     #[Route('/procesar-recuperacion', name: 'procesar_recuperacion', methods: ['POST'])]
     public function procesarRecuperacion(
         Request $request,
+        UsuarioRepository $usuarios,
         EntityManagerInterface $entityManager,
-        MailerInterface $mailer,
+        EmailManager $emailManager,
         RateLimiterFactory $recuperacionPasswordLimiter
-    ) {
-        if (!$this->isCsrfTokenValid('recuperar', $request->request->get('_token'))) {
+    ): Response {
+        if (!$this->isCsrfTokenValid('recuperar', (string) $request->request->get('_token'))) {
             throw $this->createAccessDeniedException('Token CSRF inválido.');
         }
 
@@ -48,7 +49,7 @@ class RecuperarContrasenaController extends AbstractController
         }
 
         $email = trim((string) $request->request->get('email'));
-        $usuario = $entityManager->getRepository(Usuario::class)->findOneBy(['email' => $email]);
+        $usuario = $usuarios->porEmail($email);
 
         if ($usuario) {
             // Token aleatorio de un solo uso; en BD solo se guarda su hash
@@ -57,20 +58,7 @@ class RecuperarContrasenaController extends AbstractController
             $usuario->setCodigoRecuperacionExpira(new \DateTime('+1 hour'));
             $entityManager->flush();
 
-            $urlRecuperacion = $this->generateUrl(
-                'restablecer_password',
-                ['codigo' => $token],
-                UrlGeneratorInterface::ABSOLUTE_URL
-            );
-
-            $emailMessage = (new Email())
-                ->from($this->getParameter('app.mail_from'))
-                ->to($usuario->getEmail())
-                ->subject('Restablecer tu Contraseña')
-                ->html("<p>Haz clic en el siguiente enlace para restablecer tu contraseña (caduca en 1 hora):</p>
-                <a href='" . $urlRecuperacion . "'>Restablecer Contraseña</a>");
-
-            $mailer->send($emailMessage);
+            $emailManager->enviarRecuperacion($usuario, $token);
         }
 
         return $this->render('recuperar_password.html.twig', [
@@ -80,9 +68,9 @@ class RecuperarContrasenaController extends AbstractController
     }
 
     #[Route('/restablecer-password/{codigo}', name: 'restablecer_password')]
-    public function mostrarRestablecerFormulario(string $codigo, EntityManagerInterface $entityManager)
+    public function mostrarRestablecerFormulario(string $codigo, UsuarioRepository $usuarios): Response
     {
-        $usuario = $this->buscarUsuarioPorCodigo($codigo, $entityManager);
+        $usuario = $this->buscarUsuarioPorCodigo($codigo, $usuarios);
 
         if (!$usuario) {
             return $this->render('restablecer_password.html.twig', [
@@ -100,10 +88,11 @@ class RecuperarContrasenaController extends AbstractController
     #[Route('/procesar-restablecimiento', name: 'procesar_restablecimiento', methods: ['POST'])]
     public function procesarRestablecimiento(
         Request $request,
+        UsuarioRepository $usuarios,
         EntityManagerInterface $entityManager,
         UserPasswordHasherInterface $passwordHasher
-    ) {
-        if (!$this->isCsrfTokenValid('restablecer', $request->request->get('_token'))) {
+    ): Response {
+        if (!$this->isCsrfTokenValid('restablecer', (string) $request->request->get('_token'))) {
             throw $this->createAccessDeniedException('Token CSRF inválido.');
         }
 
@@ -111,7 +100,7 @@ class RecuperarContrasenaController extends AbstractController
         $nuevaContrasena = (string) $request->request->get('password');
         $confirmacion = (string) $request->request->get('confirm_password');
 
-        $usuario = $this->buscarUsuarioPorCodigo($codigo, $entityManager);
+        $usuario = $this->buscarUsuarioPorCodigo($codigo, $usuarios);
 
         if (!$usuario) {
             return $this->render('restablecer_password.html.twig', [
@@ -143,15 +132,13 @@ class RecuperarContrasenaController extends AbstractController
         return $this->redirectToRoute('ctrl_login');
     }
 
-    private function buscarUsuarioPorCodigo(string $codigo, EntityManagerInterface $entityManager): ?Usuario
+    private function buscarUsuarioPorCodigo(string $codigo, UsuarioRepository $usuarios): ?Usuario
     {
         if ($codigo === '') {
             return null;
         }
 
-        $usuario = $entityManager->getRepository(Usuario::class)->findOneBy([
-            'codigoRecuperacion' => hash('sha256', $codigo)
-        ]);
+        $usuario = $usuarios->findOneBy(['codigoRecuperacion' => hash('sha256', $codigo)]);
 
         if (!$usuario) {
             return null;

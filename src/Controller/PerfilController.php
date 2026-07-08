@@ -2,100 +2,84 @@
 
 namespace App\Controller;
 
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\HttpFoundation\Response;
-use Doctrine\ORM\EntityManagerInterface;
-use App\Entity\Usuario;
 use App\Entity\Publicacion;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
+use App\Entity\Usuario;
+use App\Enum\EstadoAmistad;
+use App\Repository\AmistadRepository;
+use App\Repository\PublicacionRepository;
+use App\Repository\UsuarioRepository;
+use App\Security\Voter\PerfilVoter;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
-use App\Entity\Amistad;
 
 class PerfilController extends AbstractController
 {
+    private const FOTO_POR_DEFECTO = 'default-profile-picture.jpg';
+
     #[Route('/perfil/{id}', name: 'ver_perfil')]
-    #[IsGranted('IS_AUTHENTICATED_FULLY')] // 🔐 Solo usuarios autenticados
-    public function verPerfil(int $id, EntityManagerInterface $entityManager): Response
-    {
-        $usuario = $entityManager->getRepository(Usuario::class)->find($id);
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    public function verPerfil(
+        int $id,
+        UsuarioRepository $usuarios,
+        AmistadRepository $amistades,
+        PublicacionRepository $publicaciones
+    ): Response {
+        $usuario = $usuarios->find($id);
+
+        /** @var Usuario $usuarioActual */
         $usuarioActual = $this->getUser();
-    
+
         if (!$usuario) {
             throw $this->createNotFoundException("El usuario no existe.");
         }
-    
-        // 📌 Comprobar si son amigos
-        $amistad = $entityManager->getRepository(Amistad::class)->findOneBy([
-            'solicitante' => $usuarioActual,
-            'receptor' => $usuario,
-            'estado' => 'aceptada'
-        ]) ?? $entityManager->getRepository(Amistad::class)->findOneBy([
-            'solicitante' => $usuario,
-            'receptor' => $usuarioActual,
-            'estado' => 'aceptada'
-        ]);
-    
-        $esAmigo = $amistad !== null;
-        $propietario = $usuarioActual->getId() === $usuario->getId(); // 📌 Es su propio perfil
-    
-        // 📌 Comprobar el estado de la solicitud de amistad
-        $solicitud = $entityManager->getRepository(Amistad::class)->findOneBy([
-            'solicitante' => $usuarioActual,
-            'receptor' => $usuario
-        ]);
-    
-        switch ($solicitud?->getEstado()) { 
-            case 'pendiente':
-                $solicitudPendiente = 'pendiente';
-                break;
-            case 'aceptada':
-                $solicitudPendiente = 'aceptada';
-                break;
-            default:
-                $solicitudPendiente = 'ninguna';
+
+        $propietario = $usuarioActual->getId() === $usuario->getId();
+        $esAmigo = !$propietario && $amistades->sonAmigos($usuarioActual, $usuario);
+
+        // Estado de la relación para la vista: aceptada > pendiente > ninguna
+        if ($esAmigo) {
+            $solicitudPendiente = 'aceptada';
+        } elseif ($amistades->estadoDeSolicitud($usuarioActual, $usuario) === EstadoAmistad::Pendiente) {
+            $solicitudPendiente = 'pendiente';
+        } else {
+            $solicitudPendiente = 'ninguna';
         }
-        
-        // 🔒 Si NO es amigo y NO es su perfil → No mostrar publicaciones
-        if (!$esAmigo && !$propietario) {
-            return $this->render('perfil.html.twig', [
-                'usuario' => $usuario,
-                'publicaciones' => [],
-                'propietario' => false,
-                'privado' => true, // 🚫 Mostrar mensaje de perfil privado
-                'solicitudPendiente' => $solicitudPendiente, // 📌 Pasamos el estado correcto
-            ]);
-        }
-    
-        // 🔓 Si es amigo o es su perfil → Mostrar publicaciones
-        $publicaciones = $entityManager->getRepository(Publicacion::class)->findBy(
-            ['usuario' => $usuario],
-            ['fechaCreacion' => 'DESC'] // 📌 Ordenar publicaciones por fecha
-        );
-    
+
+        // Las publicaciones solo son visibles para el propietario y sus amigos
+        $puedeVer = $propietario || $esAmigo;
+
         return $this->render('perfil.html.twig', [
             'usuario' => $usuario,
-            'publicaciones' => $publicaciones,
+            'publicaciones' => $puedeVer ? $publicaciones->dePerfil($usuario) : [],
             'propietario' => $propietario,
-            'privado' => false, // ✅ Puede ver el perfil
-            'solicitudPendiente' => $solicitudPendiente, // 📌 Pasamos el estado correcto
+            'privado' => !$puedeVer,
+            'solicitudPendiente' => $solicitudPendiente,
         ]);
     }
-    
 
     #[Route('/perfil/{id}/nueva-publicacion', name: 'nueva_publicacion', methods: ['POST'])]
-    #[IsGranted('IS_AUTHENTICATED_FULLY')] // 🔐 Solo usuarios autenticados
-    public function nuevaPublicacion(Request $request, int $id, EntityManagerInterface $entityManager): Response
-    {
-        $usuario = $entityManager->getRepository(Usuario::class)->find($id);
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    public function nuevaPublicacion(
+        Request $request,
+        int $id,
+        UsuarioRepository $usuarios,
+        EntityManagerInterface $entityManager
+    ): Response {
+        $usuario = $usuarios->find($id);
 
-        if (!$usuario || $this->getUser()->getId() !== $usuario->getId()) {
-            throw $this->createAccessDeniedException("No puedes publicar en este perfil.");
+        if (!$usuario) {
+            throw $this->createNotFoundException("El usuario no existe.");
         }
 
-        if (!$this->isCsrfTokenValid('publicar', $request->request->get('_token'))) {
+        $this->denyAccessUnlessGranted(PerfilVoter::GESTIONAR, $usuario, 'No puedes publicar en este perfil.');
+
+        if (!$this->isCsrfTokenValid('publicar', (string) $request->request->get('_token'))) {
             throw $this->createAccessDeniedException('Token CSRF inválido.');
         }
 
@@ -118,27 +102,35 @@ class PerfilController extends AbstractController
 
         return $this->redirectToRoute('ver_perfil', ['id' => $id]);
     }
+
     #[Route('/perfil/{id}/editar', name: 'editar_perfil')]
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
-    public function editarPerfil(int $id, Request $request, EntityManagerInterface $entityManager, ValidatorInterface $validator): Response
-    {
-        $usuario = $entityManager->getRepository(Usuario::class)->find($id);
+    public function editarPerfil(
+        int $id,
+        Request $request,
+        UsuarioRepository $usuarios,
+        EntityManagerInterface $entityManager,
+        ValidatorInterface $validator
+    ): Response {
+        $usuario = $usuarios->find($id);
 
-        if (!$usuario || $this->getUser()->getId() !== $usuario->getId()) {
-            throw $this->createAccessDeniedException("No puedes editar este perfil.");
+        if (!$usuario) {
+            throw $this->createNotFoundException("El usuario no existe.");
         }
+
+        $this->denyAccessUnlessGranted(PerfilVoter::GESTIONAR, $usuario, 'No puedes editar este perfil.');
 
         $error = null;
 
         if ($request->isMethod('POST')) {
-            if (!$this->isCsrfTokenValid('editar_perfil', $request->request->get('_token'))) {
+            if (!$this->isCsrfTokenValid('editar_perfil', (string) $request->request->get('_token'))) {
                 throw $this->createAccessDeniedException('Token CSRF inválido.');
             }
 
             $nuevoNombre = trim((string) $request->request->get('nombre_usuario'));
 
             // Comprobar que el nombre no esté ya cogido por otro usuario
-            $existente = $entityManager->getRepository(Usuario::class)->findOneBy(['nombreUsuario' => $nuevoNombre]);
+            $existente = $usuarios->porNombreUsuario($nuevoNombre);
 
             if ($existente && $existente->getId() !== $usuario->getId()) {
                 $error = 'Ese nombre de usuario ya está en uso.';
@@ -150,7 +142,7 @@ class PerfilController extends AbstractController
 
                 if (count($errores) > 0) {
                     $usuario->setNombreUsuario($nombreAnterior);
-                    $error = $errores[0]->getMessage();
+                    $error = (string) $errores[0]->getMessage();
                 } else {
                     $entityManager->flush();
 
@@ -164,20 +156,27 @@ class PerfilController extends AbstractController
             'error' => $error,
         ]);
     }
+
     #[Route('/perfil/{id}/subir-foto', name: 'subir_foto_perfil')]
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
-    public function subirFotoPerfil(Request $request, int $id, EntityManagerInterface $entityManager): Response
-    {
-        $usuario = $entityManager->getRepository(Usuario::class)->find($id);
+    public function subirFotoPerfil(
+        Request $request,
+        int $id,
+        UsuarioRepository $usuarios,
+        EntityManagerInterface $entityManager
+    ): Response {
+        $usuario = $usuarios->find($id);
 
-        if (!$usuario || $this->getUser()->getId() !== $usuario->getId()) {
-            throw $this->createAccessDeniedException("No puedes modificar esta foto de perfil.");
+        if (!$usuario) {
+            throw $this->createNotFoundException("El usuario no existe.");
         }
+
+        $this->denyAccessUnlessGranted(PerfilVoter::GESTIONAR, $usuario, 'No puedes modificar esta foto de perfil.');
 
         $error = null;
 
         if ($request->isMethod('POST')) {
-            if (!$this->isCsrfTokenValid('subir_foto', $request->request->get('_token'))) {
+            if (!$this->isCsrfTokenValid('subir_foto', (string) $request->request->get('_token'))) {
                 throw $this->createAccessDeniedException('Token CSRF inválido.');
             }
 
@@ -209,19 +208,26 @@ class PerfilController extends AbstractController
             'error' => $error,
         ]);
     }
+
     #[Route('/perfil/{id}/quitar-foto', name: 'quitar_foto_perfil', methods: ['POST'])]
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
-    public function quitarFotoPerfil(int $id, Request $request, EntityManagerInterface $entityManager): Response
-    {
-        if (!$this->isCsrfTokenValid('quitar_foto', $request->request->get('_token'))) {
+    public function quitarFotoPerfil(
+        int $id,
+        Request $request,
+        UsuarioRepository $usuarios,
+        EntityManagerInterface $entityManager
+    ): Response {
+        if (!$this->isCsrfTokenValid('quitar_foto', (string) $request->request->get('_token'))) {
             throw $this->createAccessDeniedException('Token CSRF inválido.');
         }
 
-        $usuario = $entityManager->getRepository(Usuario::class)->find($id);
+        $usuario = $usuarios->find($id);
 
-        if (!$usuario || $this->getUser()->getId() !== $usuario->getId()) {
-            throw $this->createAccessDeniedException("No puedes modificar esta foto de perfil.");
+        if (!$usuario) {
+            throw $this->createNotFoundException("El usuario no existe.");
         }
+
+        $this->denyAccessUnlessGranted(PerfilVoter::GESTIONAR, $usuario, 'No puedes modificar esta foto de perfil.');
 
         if ($usuario->getFotoPerfil()) {
             $this->borrarFotoAnterior($usuario);
@@ -237,7 +243,7 @@ class PerfilController extends AbstractController
         $fotoActual = $usuario->getFotoPerfil();
 
         // La imagen por defecto es compartida: no se borra del disco
-        if (!$fotoActual || $fotoActual === 'default-profile-picture.jpg') {
+        if (!$fotoActual || $fotoActual === self::FOTO_POR_DEFECTO) {
             return;
         }
 
@@ -249,4 +255,3 @@ class PerfilController extends AbstractController
         }
     }
 }
-
