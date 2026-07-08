@@ -14,7 +14,7 @@
         <form method="POST" action="{{ path('nueva_publicacion', { id: usuario.id }) }}">
             <input type="hidden" name="_token" value="{{ csrf_token('publicar') }}">
             <input type="hidden" name="redirect" value="home">
-            <textarea class="input" name="contenido" maxlength="255" required placeholder="¿Qué está pasando?"></textarea>
+            <textarea class="input" name="contenido" maxlength="255" required placeholder="¿Qué está pasando? Menciona a tus amigos con @usuario"></textarea>
             <div class="composer-actions">
                 <button type="submit" class="btn btn-primary btn-sm">Publicar</button>
             </div>
@@ -44,7 +44,7 @@
                         <a class="post-author" href="{{ path('ver_perfil', { id: publicacion.usuario.id }) }}">{{ publicacion.usuario.nombreUsuario }}</a>
                         <span class="post-date">· {{ publicacion.fechaCreacion|date('d/m/Y H:i') }}</span>
                     </div>
-                    <p class="post-content">{{ publicacion.contenido }}</p>
+                    <p class="post-content">{{ publicacion.contenido|menciones }}</p>
                     <div class="post-actions">
                         <a class="post-action" href="{{ path('ver_publicacion', { id: publicacion.id }) }}">
                             {{ ui.icon('comment') }} Comentarios

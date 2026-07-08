@@ -4,15 +4,18 @@ namespace App\Twig;
 
 use App\Entity\Usuario;
 use App\Repository\AmistadRepository;
+use App\Service\MencionRenderer;
 use Symfony\Bundle\SecurityBundle\Security;
 use Twig\Extension\AbstractExtension;
+use Twig\TwigFilter;
 use Twig\TwigFunction;
 
 class AppExtension extends AbstractExtension
 {
     public function __construct(
         private Security $security,
-        private AmistadRepository $amistades
+        private AmistadRepository $amistades,
+        private MencionRenderer $menciones
     ) {
     }
 
@@ -20,6 +23,14 @@ class AppExtension extends AbstractExtension
     {
         return [
             new TwigFunction('solicitudes_pendientes', [$this, 'solicitudesPendientes']),
+        ];
+    }
+
+    public function getFilters(): array
+    {
+        return [
+            // El HTML lo genera MencionRenderer escapando el texto: es seguro
+            new TwigFilter('menciones', [$this->menciones, 'aHtml'], ['is_safe' => ['html']]),
         ];
     }
 

@@ -88,7 +88,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const contenidoEl = document.createElement("p");
         contenidoEl.className = "post-content";
-        contenidoEl.textContent = data.contenido;
+        if (data.contenido_html) {
+            // El servidor devuelve el contenido ya escapado y con las menciones enlazadas
+            contenidoEl.innerHTML = data.contenido_html;
+        } else {
+            contenidoEl.textContent = data.contenido;
+        }
 
         meta.append(autor, fecha);
         body.append(meta, contenidoEl);

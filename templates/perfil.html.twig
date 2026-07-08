@@ -52,7 +52,7 @@
                 {{ ui.avatar(usuario, 'avatar-md') }}
                 <form method="POST" action="{{ path('nueva_publicacion', { id: usuario.id }) }}">
                     <input type="hidden" name="_token" value="{{ csrf_token('publicar') }}">
-                    <textarea class="input" name="contenido" maxlength="255" required placeholder="¿Qué está pasando?"></textarea>
+                    <textarea class="input" name="contenido" maxlength="255" required placeholder="¿Qué está pasando? Menciona a tus amigos con @usuario"></textarea>
                     <div class="composer-actions">
                         <button type="submit" class="btn btn-primary btn-sm">Publicar</button>
                     </div>
@@ -73,7 +73,7 @@
                             <span class="post-author">{{ usuario.nombreUsuario }}</span>
                             <span class="post-date">· {{ publicacion.fechaCreacion|date('d/m/Y H:i') }}</span>
                         </div>
-                        <p class="post-content">{{ publicacion.contenido }}</p>
+                        <p class="post-content">{{ publicacion.contenido|menciones }}</p>
                         <div class="post-actions">
                             <a class="post-action" href="{{ path('ver_publicacion', { id: publicacion.id }) }}">
                                 {{ ui.icon('comment') }} Comentarios

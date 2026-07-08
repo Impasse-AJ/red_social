@@ -55,6 +55,9 @@
     {% block body %}{% endblock %}
 </main>
 
+{% if app.user %}
+    <script src="{{ asset('js/menciones.js') }}"></script>
+{% endif %}
 {% block scripts %}{% endblock %}
 </body>
 </html>

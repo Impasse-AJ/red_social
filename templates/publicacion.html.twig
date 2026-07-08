@@ -20,7 +20,7 @@
                 <a class="post-author" href="{{ path('ver_perfil', { id: publicacion.usuario.id }) }}">{{ publicacion.usuario.nombreUsuario }}</a>
                 <span class="post-date">· {{ publicacion.fechaCreacion|date('d/m/Y H:i') }}</span>
             </div>
-            <p class="post-content">{{ publicacion.contenido }}</p>
+            <p class="post-content">{{ publicacion.contenido|menciones }}</p>
         </div>
     </article>
 
@@ -35,7 +35,7 @@
                         <span class="post-author">{{ comentario.usuario.nombreUsuario }}</span>
                         <span class="post-date">· {{ comentario.fechaCreacion|date('d/m/Y H:i') }}</span>
                     </div>
-                    <p class="post-content">{{ comentario.contenido }}</p>
+                    <p class="post-content">{{ comentario.contenido|menciones }}</p>
                 </div>
             </li>
         {% endfor %}

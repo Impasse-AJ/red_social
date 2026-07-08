@@ -7,6 +7,7 @@ use App\Entity\Usuario;
 use App\Repository\ComentarioRepository;
 use App\Repository\PublicacionRepository;
 use App\Security\Voter\PublicacionVoter;
+use App\Service\MencionRenderer;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -44,7 +45,8 @@ class PublicacionController extends AbstractController
         int $id,
         Request $request,
         PublicacionRepository $publicaciones,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        MencionRenderer $menciones
     ): Response {
         if (!$this->isCsrfTokenValid('comentar', (string) $request->request->get('_token'))) {
             return $this->json(['error' => 'Token CSRF inválido.'], Response::HTTP_FORBIDDEN);
@@ -82,6 +84,7 @@ class PublicacionController extends AbstractController
             'id' => $comentario->getId(),
             'usuario' => $usuario->getNombreUsuario(),
             'contenido' => $contenido,
+            'contenido_html' => $menciones->aHtml($contenido), // escapado + menciones enlazadas
             'fecha' => $comentario->getFechaCreacion()->format('d/m/Y H:i'),
         ]);
     }

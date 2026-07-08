@@ -253,6 +253,56 @@ textarea.input { resize: vertical; min-height: 90px; }
     padding: 2.5rem 1rem;
 }
 
+/* Los iconos decorativos de los estados vacíos, contenidos y discretos */
+.empty-state > svg {
+    width: 44px;
+    height: 44px;
+    color: var(--border-strong);
+    margin-bottom: .75rem;
+}
+.empty-state h3 { color: var(--text); }
+.empty-state .btn { margin-top: .5rem; }
+
+/* Menciones @usuario dentro de publicaciones y comentarios */
+.mention {
+    color: var(--accent);
+    font-weight: 600;
+}
+.mention:hover { text-decoration: underline; }
+
+/* Desplegable de autocompletado de menciones: superpuesto, nunca empuja el contenido */
+.mention-suggest {
+    position: absolute;
+    z-index: 60;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.mention-suggest-item {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    width: 100%;
+    padding: .5rem .75rem;
+    border: none;
+    background: none;
+    font-family: var(--font);
+    font-size: .92rem;
+    font-weight: 600;
+    color: var(--text);
+    text-align: left;
+    cursor: pointer;
+}
+
+.mention-suggest-item.activa,
+.mention-suggest-item:hover {
+    background: var(--accent-soft);
+    color: var(--accent);
+}
+
 /* ==========================================================================
    Avatares
    ========================================================================== */
@@ -771,6 +821,47 @@ textarea.input { resize: vertical; min-height: 90px; }
         transform: translateX(-1500px) translateY(1000px) rotate(-35deg);
         opacity: 0;
     }
+}
+
+/* ==========================================================================
+   Responsive (móvil)
+   ========================================================================== */
+
+@media (max-width: 640px) {
+    /* Navegación de la app: más compacta */
+    .navbar-inner { padding: 0 .6rem; gap: .5rem; }
+    .nav-link { padding: .45rem .55rem; }
+
+    /* Cabeceras de perfil: avatar y acciones en columna si no caben */
+    .profile-top {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: .75rem;
+    }
+    .avatar-lg { width: 80px; height: 80px; }
+
+    /* Filas de usuario (Descubrir, Solicitudes): permitir salto de línea */
+    .user-row { flex-wrap: wrap; }
+    .user-row-actions { margin-left: auto; }
+
+    /* Landing: nav y hero más compactos */
+    .landing-nav { padding: .75rem 1rem; }
+    .landing-nav .actions { gap: .4rem; }
+    .landing-nav .btn { padding: .45rem .85rem; font-size: .85rem; }
+    .hero { padding: 2.5rem 1rem 2rem; gap: 2rem; }
+    .hero-cta .btn { padding: .65rem 1.2rem; }
+    .landing-section { padding: 2.5rem 1rem; }
+    .hero-sky .sky-sun { width: 44px; height: 44px; top: 9%; }
+
+    /* Composers y tarjetas con menos aire */
+    .card { padding: 1rem; }
+    .auth-card { padding: 1.5rem 1.25rem; }
+}
+
+@media (max-width: 400px) {
+    /* Pantallas muy estrechas: los botones de la landing no deben desbordar */
+    .landing-nav .btn { padding: .4rem .65rem; font-size: .8rem; }
+    .hero h1 { font-size: 1.9rem; }
 }
 
 /* Accesibilidad: sin animaciones para quien las tiene desactivadas */
