@@ -42,12 +42,13 @@ ENV APP_ENV=prod \
     LOCK_DSN=flock \
     MESSENGER_TRANSPORT_DSN="doctrine://default?auto_setup=0"
 
-# Compilar los assets (AssetMapper) con variables ficticias: solo hace falta arrancar el kernel
+# Descargar los assets de terceros (Stimulus/Turbo, no versionados) y compilar
+# el mapa de assets. Variables ficticias: solo hace falta arrancar el kernel.
 RUN APP_SECRET=build \
     DATABASE_URL="mysql://build:build@db:3306/build?serverVersion=8.0" \
     MAILER_DSN="null://null" \
     MAILER_FROM="build@localhost" \
-    php bin/console asset-map:compile
+    sh -c 'php bin/console importmap:install && php bin/console asset-map:compile'
 
 # Directorios escribibles por Apache (caché/logs y fotos de perfil)
 RUN mkdir -p var public/uploads \
